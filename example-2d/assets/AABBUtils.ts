@@ -30,7 +30,7 @@ export class AABBUtils {
         return boundingBox1.intersects(boundingBox2);
     }
 
-    static findAllUnobstructedNodes(nodes: Node[], arrowDirections: object, sceneSize: Readonly<Size>) {
+    static findAllUnobstructedNodes(nodes: Node[], arrowDirections: object, sceneSize: Readonly<Size>): Node[] {
         const allUnobstructedNodes: Node[] = [];
         let currentIteration = 1;
 
@@ -49,7 +49,7 @@ export class AABBUtils {
         return allUnobstructedNodes;
     }
 
-    private static findUnobstructedNodes(currentIteration: number, nodes: Node[], arrowDirections: object, sceneSize: Readonly<Size>) {
+    private static findUnobstructedNodes(currentIteration: number, nodes: Node[], arrowDirections: object, sceneSize: Readonly<Size>): Node[] {
         const unobstructedNodes: Node[] = [];
         for (const node of nodes) {
             const label = node.children[0].getComponent(Label)!;
