@@ -167,7 +167,7 @@ export class Main extends Component {
 
         const nodes: Node[] = [];
         const rows = 7;
-        const cols = 3;
+        const cols = 7;
         const baseNodeSize = new Size(60, 60);
         const spacing = 10;
 
@@ -191,13 +191,37 @@ export class Main extends Component {
                     sprite.color = math.Color.YELLOW;
 
                     uiTransform = node.getComponent(UITransform);
-                    const randomWidth = baseNodeSize.width + randomRangeInt(-10, 10);
-                    const randomHeight = baseNodeSize.height + randomRangeInt(-10, 10);
+                    const randomWidth = baseNodeSize.width;// + randomRangeInt(-10, 10);
+                    const randomHeight = baseNodeSize.height;// + randomRangeInt(-10, 10);
                     uiTransform.setContentSize(new Size(randomWidth, randomHeight));
 
                     const labelNode = new Node(`Label${i * cols + j + 1}`);
                     const label = labelNode.addComponent(Label);
-                    const arrow = arrows[randomRangeInt(0, arrows.length)];
+
+                    // 1、当前待生成的节点，若其同一行的前面已经存在任一方向是向右的节点，则当前待生成的节点的方向不能是向左。
+                    // 2、当前待生成的节点，若其同一列的上面已经存在任一方向是向下的节点，则当前待生成的节点的方向不能是向上。
+                    let arrow: string;
+                    let validArrows = arrows.slice();
+                    // Check for existing nodes in the same row
+                    for (let k = 0; k < j; k++) {
+                        const leftNode = nodes[i * cols + k];
+                        const leftLabel = leftNode.children[0].getComponent(Label)!;
+                        const leftArrow = leftLabel.string.split(' ')[1];
+                        if (leftArrow === '→') {
+                            validArrows = validArrows.filter(a => a !== '←');
+                        }
+                    }
+                    // Check for existing nodes in the same column
+                    for (let l = 0; l < i; l++) {
+                        const topNode = nodes[l * cols + j];
+                        const topLabel = topNode.children[0].getComponent(Label)!;
+                        const topArrow = topLabel.string.split(' ')[1];
+                        if (topArrow === '↓') {
+                            validArrows = validArrows.filter(a => a !== '↑');
+                        }
+                    }
+                    arrow = validArrows[randomRangeInt(0, validArrows.length)];
+
                     sprite.color = arrowColors[arrow]; // 颜色根据箭头符号设置
                     label.string = `${i * cols + j + 1} ${arrow}`;
                     label.fontSize = 20;
@@ -259,9 +283,6 @@ export class Main extends Component {
             node.setPosition(position.add(new Vec3(offsetX - 25, 0, 0)));
         });
 
-        // 检查并调整节点方向
-        this.adjustNodeDirections(nodes, arrowDirections, rows, cols);
-
         // 更新节点颜色
         nodes.forEach(node => {
             const label = node.children[0].getComponent(Label)!;
@@ -281,89 +302,6 @@ export class Main extends Component {
         console.log(`全部死障节点集合 Nodes:`, allObscuredNodes.map(node => node.name));
     }
 
-    // 当前生成节点集合的方法generateNodesOBBV2()有一个问题是可能会在同一行或同一列生成相向方向的节点，导致最终有点节点无法移动屏幕，也就是无法满足以下要求：
-    // 每个节点均有一个箭头方向，节点只能朝箭头方向移动，若节点箭头方向前面有其他节点，则不能移动；要确保所有节点最终都能移出屏幕范围，为了达到此要求，需要确保：
-    // 在X轴上，要确保向左移动的节点其左边不能有向右移动的节点
-    // 在X轴上，要确保向右移动的节点其右边不能有向左移动的节点
-    // 在Y轴上，要确保向上移动的节点其上边不能有向下移动的节点
-    // 在Y轴上，要确保向下移动的节点其下边不能有向上移动的节点
-    // 我的想法是，在generateNodesOBBV2()中生成nodes之后，再去另外检查一遍所有节点的箭头方向，如果在同一行或同一列上有相向方向的节点，就要相应的调整一些节点的方向，你觉得我说的方案可行不，若可行的话，那你帮我修改下generateNodesOBBV2()方法吧。
-    // 检查并调整节点方向的方法
-    adjustNodeDirections(nodes: Node[], arrowDirections: object, rows: number, cols: number) {
-        const directionPairs = [
-            { primary: '→', opposite: '←' },
-            { primary: '←', opposite: '→' },
-            { primary: '↑', opposite: '↓' },
-            { primary: '↓', opposite: '↑' }
-        ];
-
-        const directionCounts = {
-            '→': 0,
-            '←': 0,
-            '↑': 0,
-            '↓': 0
-        };
-
-        nodes.forEach(node => {
-            const label = node.children[0].getComponent(Label)!;
-            const arrow = label.string.split(' ')[1];
-            directionCounts[arrow]++;
-        });
-
-        const maxDirectionCount = Math.ceil(nodes.length / 4);
-
-        // 检查每一行
-        for (let i = 0; i < rows; i++) {
-            const rowNodes = nodes.slice(i * cols, (i + 1) * cols);
-            directionPairs.forEach(pair => {
-                const primaryNodes = rowNodes.filter(node => node.children[0].getComponent(Label)!.string.includes(pair.primary));
-                const oppositeNodes = rowNodes.filter(node => node.children[0].getComponent(Label)!.string.includes(pair.opposite));
-                if (primaryNodes.length > 0 && oppositeNodes.length > 0) {
-                    oppositeNodes.forEach(node => {
-                        const label = node.children[0].getComponent(Label)!;
-                        if (directionCounts[pair.primary] < maxDirectionCount) {
-                            label.string = label.string.replace(pair.opposite, pair.primary);
-                            directionCounts[pair.primary]++;
-                            directionCounts[pair.opposite]--;
-                        } else {
-                            const newDirection = Object.keys(directionCounts).find(dir => directionCounts[dir] < maxDirectionCount && dir !== pair.opposite);
-                            if (newDirection) {
-                                label.string = label.string.replace(pair.opposite, newDirection);
-                                directionCounts[newDirection]++;
-                                directionCounts[pair.opposite]--;
-                            }
-                        }
-                    });
-                }
-            });
-        }
-
-        // 检查每一列
-        for (let j = 0; j < cols; j++) {
-            const colNodes = nodes.filter((_, index) => index % cols === j);
-            directionPairs.forEach(pair => {
-                const primaryNodes = colNodes.filter(node => node.children[0].getComponent(Label)!.string.includes(pair.primary));
-                const oppositeNodes = colNodes.filter(node => node.children[0].getComponent(Label)!.string.includes(pair.opposite));
-                if (primaryNodes.length > 0 && oppositeNodes.length > 0) {
-                    oppositeNodes.forEach(node => {
-                        const label = node.children[0].getComponent(Label)!;
-                        if (directionCounts[pair.primary] < maxDirectionCount) {
-                            label.string = label.string.replace(pair.opposite, pair.primary);
-                            directionCounts[pair.primary]++;
-                            directionCounts[pair.opposite]--;
-                        } else {
-                            const newDirection = Object.keys(directionCounts).find(dir => directionCounts[dir] < maxDirectionCount && dir !== pair.opposite);
-                            if (newDirection) {
-                                label.string = label.string.replace(pair.opposite, newDirection);
-                                directionCounts[newDirection]++;
-                                directionCounts[pair.opposite]--;
-                            }
-                        }
-                    });
-                }
-            });
-        }
-    }
 
     testOBBV2WithRotation() {
         const sceneSize = this.node.getComponent(UITransform)!.contentSize;
@@ -512,7 +450,7 @@ export class Main extends Component {
         this.currentMovingNode.setPosition(position.add(speedyDirection));
         const sceneSize = this.node.getComponent(UITransform)!.contentSize;
         const currentPos = this.currentMovingNode.getPosition();
-        const xDelta = 350; // 别让节点移出屏幕X轴太远
+        const xDelta = 200; // 别让节点移出屏幕X轴太远
         if (
             currentPos.x < -sceneSize.width / 2 + xDelta ||
             currentPos.x > sceneSize.width / 2 - xDelta ||
