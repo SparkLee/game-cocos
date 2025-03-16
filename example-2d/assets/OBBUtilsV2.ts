@@ -103,7 +103,7 @@ export class OBBUtilsV2 {
             currentPos = currentPos.add(direction);
             // log(`Checking position after add direction: ${currentPos}`);
             if (currentPos.x < -sceneSize.width / 2 || currentPos.x > sceneSize.width / 2 || currentPos.y < -sceneSize.height / 2 || currentPos.y > sceneSize.height / 2) {
-                log(`节点${node.name}无阻挡 at position: ${currentPos}`);
+                // log(`节点${node.name}无阻挡 at position: ${currentPos}`);
                 node.setPosition(originalPos); // 恢复原位置
                 return true;
             }
@@ -113,7 +113,7 @@ export class OBBUtilsV2 {
 
             for (const otherNode of allNodes) {
                 if (otherNode !== node && this.areNodesIntersecting(node, otherNode)) {
-                    log(`节点${node.name}被挡 at position: ${currentPos}, otherNode: ${otherNode.name}|${otherNode.getPosition()}`);
+                    // log(`节点${node.name}被挡 at position: ${currentPos}, otherNode: ${otherNode.name}|${otherNode.getPosition()}`);
                     node.setPosition(originalPos); // 恢复原位置
                     return false;
                 }

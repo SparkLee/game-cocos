@@ -33,13 +33,24 @@ export class Main extends Component {
     public myOBBV2ArrowDirectionsWithRotation: object = {};
     public myOBBV2AllUnobstructedNodesWithRotation: Node[] = [];
 
-    private autoMoveOnUpdate: boolean = true; // 是否在update中自动移动节点
+    private autoMoveOnUpdate: boolean = false; // 是否在update中自动移动节点
     private currentMovingNode: Node | null = null; // 当前正在移动的节点
+
+    private maxIterationsToFindNodesWithoutObstructedNodes: number = 10;
+    private currentIterationToFindNodesWithoutObstructedNodes: number = 0;
 
     start() {
         // this.testAABB();
         // this.testNodesOBBIntersecting();
+
+
+        this.currentIterationToFindNodesWithoutObstructedNodes = 0;
         this.generateNodesOBBV2();
+        this.myOBBV2Nodes.forEach(node => {
+            this.node.addChild(node);
+        });
+
+
         // this.testOBBV2WithRotation();
     }
 
@@ -235,14 +246,8 @@ export class Main extends Component {
                     );
 
                     node.setPosition(position);
-
                     node.addChild(labelNode);
-
-                    this.node.addChild(node);
                     isIntersecting = nodes.some(existingNode => OBBUtilsV2.areNodesIntersecting(node, existingNode));
-                    if (isIntersecting) {
-                        this.node.removeChild(node);
-                    }
                     cnt++; // 避免死循环
                 } while (isIntersecting);
 
@@ -300,6 +305,24 @@ export class Main extends Component {
         // 找出所有的死障节点
         const allObscuredNodes = nodes.filter(node => !allUnobstructedNodes.includes(node));
         console.log(`全部死障节点集合 Nodes:`, allObscuredNodes.map(node => node.name));
+
+        // 若死障节点集合不为空，则递归调用生成节点集合的方法，直到生成的节点集合中没有死障节点（为了避免死循环，设置一个最大迭代次数限制）
+        while (
+            allObscuredNodes.length > 0 &&
+            this.currentIterationToFindNodesWithoutObstructedNodes++ < this.maxIterationsToFindNodesWithoutObstructedNodes
+        ) {
+            log(`第 ${this.currentIterationToFindNodesWithoutObstructedNodes} 次重新生成节点集合`);
+            this.generateNodesOBBV2();
+        }
+        if (
+            allObscuredNodes.length == 0 ||
+            this.currentIterationToFindNodesWithoutObstructedNodes >= this.maxIterationsToFindNodesWithoutObstructedNodes
+        ) {
+            // 将生成的节点渲染到屏幕上
+            // this.myOBBV2Nodes.forEach(node => {
+            //     this.node.addChild(node);
+            // });
+        }
     }
 
 
@@ -444,18 +467,30 @@ export class Main extends Component {
         const label = this.currentMovingNode.children[0].getComponent(Label)!;
         const arrow = label.string.split(' ')[1];
         const direction: Vec3 = this.myOBBV2ArrowDirections[arrow];
-        const speedyDirection = direction.clone().multiplyScalar(20);
+        const speed = 100;
+        const speedyDirection = direction.clone().multiplyScalar(speed);
 
         const position = this.currentMovingNode.getPosition();
         this.currentMovingNode.setPosition(position.add(speedyDirection));
         const sceneSize = this.node.getComponent(UITransform)!.contentSize;
         const currentPos = this.currentMovingNode.getPosition();
-        const xDelta = 200; // 别让节点移出屏幕X轴太远
         if (
-            currentPos.x < -sceneSize.width / 2 + xDelta ||
-            currentPos.x > sceneSize.width / 2 - xDelta ||
+            currentPos.x < -sceneSize.width / 2 ||
+            currentPos.x > sceneSize.width / 2 ||
             currentPos.y < -sceneSize.height / 2 ||
-            currentPos.y > sceneSize.height / 2) {
+            currentPos.y > sceneSize.height / 2
+        ) {
+            // 将移出边界的节点根据其移动方向重新放回到屏幕的侧边，方便调试查看
+            if (currentPos.x < -sceneSize.width / 2) {
+                this.currentMovingNode.setPosition(new Vec3(-sceneSize.width / 2 + 20, currentPos.y, 0));
+            } else if (currentPos.x > sceneSize.width / 2) {
+                this.currentMovingNode.setPosition(new Vec3(sceneSize.width / 2 - 20, currentPos.y, 0));
+            } else if (currentPos.y < -sceneSize.height / 2) {
+                this.currentMovingNode.setPosition(new Vec3(currentPos.x, -sceneSize.height / 2 + 20, 0));
+            } else if (currentPos.y > sceneSize.height / 2) {
+                this.currentMovingNode.setPosition(new Vec3(currentPos.x, sceneSize.height / 2 - 20, 0));
+            }
+
             this.currentMovingNode = null; // 移出边界后，将当前移动的节点置为null，并继续移动下一个节点
         }
     }
