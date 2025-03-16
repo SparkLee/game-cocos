@@ -34,7 +34,7 @@ export class AABBUtils {
         const allUnobstructedNodes: Node[] = [];
         let currentIteration = 1;
 
-        while (nodes.length > 0 && currentIteration < 10) {
+        while (nodes.length > 0 && currentIteration < 50) {
             const unobstructedNodes = this.findUnobstructedNodes(currentIteration, nodes, arrowDirections, sceneSize);
             allUnobstructedNodes.push(...unobstructedNodes);
 
