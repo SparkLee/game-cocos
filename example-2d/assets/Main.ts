@@ -38,7 +38,6 @@ export class Main extends Component {
     private currentIterationToFindNodesWithoutObstructedNodes: number = 0;
 
     start() {
-        // this.testAABB();
         // this.testNodesOBBIntersecting();
 
 
@@ -57,82 +56,6 @@ export class Main extends Component {
             // this.onClickMove();
             this.moveOneByOne();
         }
-    }
-
-    testAABB() {
-        const sceneSize = this.node.getComponent(UITransform)!.contentSize;
-
-        // 用箭头符号表示出上下左右
-        const arrowDirections = {
-            '↑': new Vec3(0, 1, 0),  // 上
-            '↓': new Vec3(0, -1, 0), // 下
-            '→': new Vec3(1, 0, 0),  // 右
-            '←': new Vec3(-1, 0, 0)  // 左
-        };
-        const arrowColors = {
-            '↑': math.Color.RED,
-            '↓': math.Color.YELLOW,
-            '→': math.Color.GREEN,
-            '←': math.Color.BLUE,
-        };
-        const arrows = Object.keys(arrowDirections);
-        const directions = Object.values(arrowDirections);
-
-        const nodeSize = new Size(60, 60);
-
-        const nodes: Node[] = [];
-
-        // 随机生成n个不相交的矩形节点
-        for (let i = 0; i < 10; i++) {
-            // log(`开始生成节点：${i + 1}`);
-            let node: Node;
-            let uiTransform: UITransform;
-            let sprite: Sprite
-            let position: Vec3;
-            let isIntersecting: boolean;
-
-            do {
-                node = new Node(`Rectangle${i + 1}`);
-
-                sprite = node.addComponent(Sprite);
-                sprite.spriteFrame = this.node1.getComponent(Sprite)!.spriteFrame;
-                sprite.color = math.Color.YELLOW;
-
-                uiTransform = node.getComponent(UITransform);
-                uiTransform.setContentSize(nodeSize);
-
-                const labelNode = new Node(`Label${i + 1}`);
-                const label = labelNode.addComponent(Label);
-                const arrow = arrows[randomRangeInt(0, arrows.length)];
-                sprite.color = arrowColors[arrow]; // 颜色根据箭头符号设置
-                label.string = `${i + 1} ${arrow}`;
-                label.fontSize = 20;
-
-                position = new Vec3(
-                    randomRangeInt(-sceneSize.width / 2 + nodeSize.x, sceneSize.width / 2 - nodeSize.x),
-                    randomRangeInt(-sceneSize.height / 2 + nodeSize.y, sceneSize.height / 2 - nodeSize.y),
-                    0
-                );
-                node.setPosition(position);
-
-                node.addChild(labelNode);
-
-                this.node.addChild(node);
-                isIntersecting = nodes.some(existingNode => OBBUtils.areNodesIntersecting(node, existingNode));
-                if (isIntersecting) {
-                    // log(`节点相交，重新生成！：${i + 1}`);
-                    this.node.removeChild(node);
-                }
-            } while (isIntersecting);
-
-            nodes.push(node);
-            // log(`节点生成完成！：${i + 1}`);
-        }
-
-        // 找出所有的无障碍节点
-        const allUnobstructedNodes = OBBUtils.findAllUnobstructedNodes(nodes, arrowDirections, sceneSize);
-        const allObscuredNodes = nodes.filter(node => !allUnobstructedNodes.includes(node));
-        console.log(`全部死障节点集合 Nodes:`, allObscuredNodes.map(node => node.name));
     }
 
     // 生成节点集合
