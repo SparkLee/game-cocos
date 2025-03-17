@@ -1,106 +1,123 @@
-import { Node, UITransform, Vec3, Size, Vec2 } from 'cc';
-
-interface NodeOBB {
-    center: Vec3;
-    angle: number;
-    width: number;
-    height: number;
-}
-
-interface Projection {
-    min: number;
-    max: number;
-}
+import { Vec3, Node, UITransform, Label, Size, log } from "cc";
 
 export class OBBUtils {
-    // 获取OBB的函数
-    static getOBBFromNode(node: Node): NodeOBB {
-        return {
-            center: node.position,
-            angle: node.angle,
-            width: node.getComponent(UITransform).width,
-            height: node.getComponent(UITransform).height
-        };
+    // 静态方法：计算投影半径
+    private static getProjectionRadius(extents: number[], axes: Vec3[], axis: Vec3): number {
+        return extents[0] * Math.abs(axis.dot(axes[0])) + extents[1] * Math.abs(axis.dot(axes[1]));
     }
 
-    // 计算OBB顶点
-    static getOBBPoints(obb: NodeOBB) {
-        let center = obb.center;
-        let angle = obb.angle * Math.PI / 180; // 将角度转换为弧度
-        let hw = obb.width / 2;
-        let hh = obb.height / 2;
-
-        let offset1 = new Vec2(-hw, -hh).rotate(angle);
-        let offset2 = new Vec2(hw, -hh).rotate(angle);
-        let offset3 = new Vec2(hw, hh).rotate(angle);
-        let offset4 = new Vec2(-hw, hh).rotate(angle);
-
+    // 静态方法：创建轴向量
+    private static createAxes(rotation: number): Vec3[] {
         return [
-            center.clone().add(new Vec3(offset1.x, offset1.y, 0)),
-            center.clone().add(new Vec3(offset2.x, offset2.y, 0)),
-            center.clone().add(new Vec3(offset3.x, offset3.y, 0)),
-            center.clone().add(new Vec3(offset4.x, offset4.y, 0))
+            new Vec3(Math.cos(rotation), Math.sin(rotation)),
+            new Vec3(-Math.sin(rotation), Math.cos(rotation))
         ];
     }
 
-    // 获取OBB的分离轴
-    static getOBBAxes(obb: NodeOBB): Vec2[] {
-        let angle = obb.angle * Math.PI / 180; // 将角度转换为弧度
-        let axisX = new Vec2(1, 0).rotate(angle).normalize();
-        let axisY = new Vec2(0, 1).rotate(angle).normalize();
-        return [axisX, axisY];
-    }
+    // 静态方法：检测两个 OBB 是否相交
+    static detectorObb(
+        pos1: Vec3, width1: number, height1: number, rotation1: number,
+        pos2: Vec3, width2: number, height2: number, rotation2: number
+    ): boolean {
+        // 计算 extents
+        const extents1 = [width1 / 2, height1 / 2];
+        const extents2 = [width2 / 2, height2 / 2];
 
-    // 计算投影区间
-    static getProjection(points: Vec3[], axis: Vec2): Projection {
-        const axis3 = new Vec3(axis.x, axis.y, 0);
-        let min = points[0].dot(axis3);
-        let max = min;
-        for (let i = 1; i < points.length; i++) {
-            let proj = points[i].dot(axis3);
-            if (proj < min) min = proj;
-            if (proj > max) max = proj;
-        }
-        return { min: min, max: max };
-    }
+        // 计算 axes
+        const axes1 = this.createAxes(rotation1);
+        const axes2 = this.createAxes(rotation2);
 
-    // 判断投影重叠
-    static isOverlapping(proj1: Projection, proj2: Projection): boolean {
-        return proj1.max > proj2.min && proj2.max > proj1.min;
-    }
+        // 计算位置差
+        const nv = pos1.subtract(pos2);
 
-    // 判断两个OBB是否相交
-    static isOBBIntersecting(obb1: NodeOBB, obb2: NodeOBB): boolean {
-        let points1 = this.getOBBPoints(obb1);
-        let points2 = this.getOBBPoints(obb2);
-        console.log('OBB1 Points:', points1);
-        console.log('OBB2 Points:', points2);
-
-        let axes1 = this.getOBBAxes(obb1);
-        let axes2 = this.getOBBAxes(obb2);
-        console.log('OBB1 Axes:', axes1);
-        console.log('OBB2 Axes:', axes2);
-
-        let axes = axes1.concat(axes2);
-
-        for (let axis of axes) {
-            let proj1 = this.getProjection(points1, axis);
-            let proj2 = this.getProjection(points2, axis);
-
-            console.log('Axis:', axis);
-            console.log('Projection1:', proj1);
-            console.log('Projection2:', proj2);
-
-            if (!this.isOverlapping(proj1, proj2)) {
-                return false;
+        // 检测分离轴
+        for (const axis of [...axes1, ...axes2]) {
+            const proj1 = this.getProjectionRadius(extents1, axes1, axis);
+            const proj2 = this.getProjectionRadius(extents2, axes2, axis);
+            if (proj1 + proj2 <= Math.abs(nv.dot(axis))) {
+                return false; // 分离轴存在，未相交
             }
         }
-        return true;
+
+        return true; // 未找到分离轴，相交
+    }
+    static areNodesIntersecting(node1: Node, node2: Node): boolean {
+        return this.detectorObb(
+            node1.getPosition().clone(), node1.getComponent(UITransform).width, node1.getComponent(UITransform).height, node1.angle * Math.PI / 180,
+            node2.getPosition().clone(), node2.getComponent(UITransform).width, node2.getComponent(UITransform).height, node2.angle * Math.PI / 180,
+        );
     }
 
-    static areNodesIntersecting(node1: Node, node2: Node): boolean {
-        let obb1 = this.getOBBFromNode(node1);
-        let obb2 = this.getOBBFromNode(node2);
-        return this.isOBBIntersecting(obb1, obb2);
+    static findAllUnobstructedNodes(nodes: Node[], arrowDirections: object, sceneSize: Readonly<Size>): Node[] {
+        const allUnobstructedNodes: Node[] = [];
+        let currentIteration = 1;
+
+        while (nodes.length > 0 && currentIteration < 10) {
+            const unobstructedNodes = this.findUnobstructedNodes(currentIteration, nodes, arrowDirections, sceneSize);
+            allUnobstructedNodes.push(...unobstructedNodes);
+
+            // 从nodes中删除已找到的无障碍节点
+            nodes = nodes.filter(node => !unobstructedNodes.includes(node));
+            console.log(`第 ${currentIteration} 轮被障碍节点集合 Nodes:`, nodes.map(node => node.name));
+
+            currentIteration++;
+        }
+
+        console.log(`全部可解除障碍节点集合 Nodes:`, allUnobstructedNodes.map(node => node.name));
+        return allUnobstructedNodes;
+    }
+
+    private static findUnobstructedNodes(currentIteration: number, nodes: Node[], arrowDirections: object, sceneSize: Readonly<Size>): Node[] {
+        const unobstructedNodes: Node[] = [];
+        for (const node of nodes) {
+            const label = node.children[0].getComponent(Label)!;
+            const arrow = label.string.split(' ')[1];
+            const direction = arrowDirections[arrow];
+
+            if (this.isUnobstructedNode(node, arrow, direction, nodes, sceneSize)) {
+                unobstructedNodes.push(node);
+            }
+        }
+
+        // 输出无障碍节点
+        console.log(`第 ${currentIteration} 轮无障碍节点集合 Nodes:`, unobstructedNodes.map(node => node.name));
+        return unobstructedNodes;
+    }
+
+    /**
+    * 判定节点是否为无障碍节点
+    * @param node 要判定的节点
+    * @param direction 前进方向
+    * @param allNodes 场景中的所有节点
+    * @returns 如果节点为无障碍节点返回 true，否则返回 false
+    */
+    private static isUnobstructedNode(node: Node, arrow: string, direction: Vec3, allNodes: Node[], sceneSize: Size): boolean {
+        // log(`Checking node ${node.name} ${arrow}`);
+        // log(`sceneSize: ${sceneSize}`);
+
+        const originalPos = node.getPosition();
+        let currentPos = originalPos.clone();
+
+        while (true) {
+            // log(`Checking position before add direction: ${currentPos}`);
+            currentPos = currentPos.add(direction);
+            // log(`Checking position after add direction: ${currentPos}`);
+            if (currentPos.x < -sceneSize.width / 2 || currentPos.x > sceneSize.width / 2 || currentPos.y < -sceneSize.height / 2 || currentPos.y > sceneSize.height / 2) {
+                // log(`节点${node.name}无阻挡 at position: ${currentPos}`);
+                node.setPosition(originalPos); // 恢复原位置
+                return true;
+            }
+
+            node.setPosition(currentPos);
+            node.updateWorldTransform(); // 强制更新节点的变换矩阵
+
+            for (const otherNode of allNodes) {
+                if (otherNode !== node && this.areNodesIntersecting(node, otherNode)) {
+                    // log(`节点${node.name}被挡 at position: ${currentPos}, otherNode: ${otherNode.name}|${otherNode.getPosition()}`);
+                    node.setPosition(originalPos); // 恢复原位置
+                    return false;
+                }
+            }
+        }
     }
 }

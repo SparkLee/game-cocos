@@ -1,7 +1,5 @@
 import { _decorator, Component, log, Node, Vec3, UITransform, Size, randomRangeInt, Sprite, math, Label } from 'cc';
-import { AABBUtils } from './AABBUtils';
 import { OBBUtils } from './OBBUtils';
-import { OBBUtilsV2 } from './OBBUtilsV2';
 const { ccclass, property } = _decorator;
 
 // 生成节点集合需要考虑的几点要求：
@@ -55,29 +53,10 @@ export class Main extends Component {
     }
 
     update(deltaTime: number) {
-        // this.testNodesAABBIntersecting();
-        // this.testNodesOBBIntersecting();
-        // this.testNodesOBBV2Intersecting();
-
         if (this.autoMoveOnUpdate) {
             // this.onClickMove();
             this.moveOneByOne();
         }
-    }
-
-    testNodesAABBIntersecting() {
-        const areNodesIntersecting = AABBUtils.areNodesIntersecting(this.node1!, this.node2!)
-        log(`Are nodes aabb intersecting? ${areNodesIntersecting}`);
-    }
-
-    testNodesOBBIntersecting() {
-        const areNodesIntersecting = OBBUtils.areNodesIntersecting(this.node1!, this.node2!)
-        log(`Are nodes obb intersecting? ${areNodesIntersecting}`);
-    }
-
-    testNodesOBBV2Intersecting() {
-        const areNodesIntersecting = OBBUtilsV2.areNodesIntersecting(this.node1!, this.node2!)
-        log(`Are nodes obb.v2 intersecting? ${areNodesIntersecting}`);
     }
 
     testAABB() {
@@ -139,7 +118,7 @@ export class Main extends Component {
                 node.addChild(labelNode);
 
                 this.node.addChild(node);
-                isIntersecting = nodes.some(existingNode => AABBUtils.areNodesIntersecting(node, existingNode));
+                isIntersecting = nodes.some(existingNode => OBBUtils.areNodesIntersecting(node, existingNode));
                 if (isIntersecting) {
                     // log(`节点相交，重新生成！：${i + 1}`);
                     this.node.removeChild(node);
@@ -151,7 +130,7 @@ export class Main extends Component {
         }
 
         // 找出所有的无障碍节点
-        const allUnobstructedNodes = AABBUtils.findAllUnobstructedNodes(nodes, arrowDirections, sceneSize);
+        const allUnobstructedNodes = OBBUtils.findAllUnobstructedNodes(nodes, arrowDirections, sceneSize);
         const allObscuredNodes = nodes.filter(node => !allUnobstructedNodes.includes(node));
         console.log(`全部死障节点集合 Nodes:`, allObscuredNodes.map(node => node.name));
     }
@@ -247,7 +226,7 @@ export class Main extends Component {
 
                     node.setPosition(position);
                     node.addChild(labelNode);
-                    isIntersecting = nodes.some(existingNode => OBBUtilsV2.areNodesIntersecting(node, existingNode));
+                    isIntersecting = nodes.some(existingNode => OBBUtils.areNodesIntersecting(node, existingNode));
                     cnt++; // 避免死循环
                 } while (isIntersecting);
 
@@ -299,7 +278,7 @@ export class Main extends Component {
         this.myOBBV2Nodes = nodes;
 
         // 找出所有的无障碍节点
-        const allUnobstructedNodes = AABBUtils.findAllUnobstructedNodes(nodes, arrowDirections, sceneSize);
+        const allUnobstructedNodes = OBBUtils.findAllUnobstructedNodes(nodes, arrowDirections, sceneSize);
         this.myOBBV2AllUnobstructedNodes = allUnobstructedNodes;
 
         // 找出所有的死障节点
@@ -396,7 +375,7 @@ export class Main extends Component {
                 node.addChild(labelNode);
 
                 this.node.addChild(node);
-                isIntersecting = nodes.some(existingNode => OBBUtilsV2.areNodesIntersecting(node, existingNode));
+                isIntersecting = nodes.some(existingNode => OBBUtils.areNodesIntersecting(node, existingNode));
                 if (isIntersecting) {
                     this.node.removeChild(node);
                 }
@@ -408,7 +387,7 @@ export class Main extends Component {
         this.myOBBV2NodesWithRotation = nodes;
 
         // 找出所有的无障碍节点
-        const allUnobstructedNodes = AABBUtils.findAllUnobstructedNodes(nodes, arrowDirections, sceneSize);
+        const allUnobstructedNodes = OBBUtils.findAllUnobstructedNodes(nodes, arrowDirections, sceneSize);
         this.myOBBV2AllUnobstructedNodesWithRotation = allUnobstructedNodes;
 
         // 找出所有的死障节点
