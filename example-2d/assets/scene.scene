@@ -191,7 +191,7 @@
     "_priority": 0,
     "_fov": 45,
     "_fovAxis": 0,
-    "_orthoHeight": 417.761,
+    "_orthoHeight": 360,
     "_near": 0,
     "_far": 1000,
     "_color": {
@@ -469,8 +469,8 @@
     "_prefab": null,
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": -411.351,
-      "y": 319.148,
+      "x": -678.494,
+      "y": 324.862,
       "z": 0
     },
     "_lrot": {
@@ -795,8 +795,8 @@
     "_prefab": null,
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": -411.351,
-      "y": 264.862,
+      "x": -678.494,
+      "y": 270.576,
       "z": 0
     },
     "_lrot": {
@@ -1121,8 +1121,8 @@
     "_prefab": null,
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": -411.351,
-      "y": 208.937,
+      "x": -462.869,
+      "y": 314.65,
       "z": 0
     },
     "_lrot": {
@@ -1208,7 +1208,7 @@
     "__prefab": null,
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 200,
+      "width": 100,
       "height": 40
     },
     "_anchorPoint": {
@@ -1238,10 +1238,10 @@
       "b": 0,
       "a": 255
     },
-    "_string": "一个接一个移动",
+    "_string": "跑一把",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
-    "_actualFontSize": 20,
+    "_actualFontSize": 27.86111111111111,
     "_fontSize": 20,
     "_fontFamily": "Arial",
     "_lineHeight": 40,
@@ -1292,7 +1292,7 @@
     "__prefab": null,
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 200,
+      "width": 100,
       "height": 40
     },
     "_anchorPoint": {
@@ -1450,8 +1450,8 @@
     "_prefab": null,
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": -460.553,
-      "y": 147.243,
+      "x": -727.696,
+      "y": 152.957,
       "z": 0
     },
     "_lrot": {
