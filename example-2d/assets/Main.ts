@@ -1,6 +1,12 @@
 import { _decorator, Component, log, Node, Vec3, UITransform, Size, randomRangeInt, Sprite, math, Label } from 'cc';
 import { OBBUtils } from './OBBUtils';
+import { NodeScript } from './NodeScript';
+import { NodesManager } from './NodesManager';
 const { ccclass, property } = _decorator;
+
+// 造成死障的原因：
+// 1. 同一行或同一列的两个节点方向相反，相向而行，互不想让，堵死了。
+// 2. 有四个节点，方向上首尾相连，形成一个环，互相堵死了。
 
 // 生成节点集合需要考虑的几点要求：
 // 1. 生成的节点不能相交。
@@ -24,7 +30,6 @@ export class Main extends Component {
     public node2: Node | null = null;
 
     public myOBBV2Nodes: Node[] = [];
-    public myOBBV2ArrowDirections: object = {};
     public myOBBV2AllUnobstructedNodes: Node[] = [];
 
     public myOBBV2NodesWithRotation: Node[] = [];
@@ -34,7 +39,6 @@ export class Main extends Component {
     private autoMoveOnUpdate: boolean = false; // 是否在update中自动移动节点
     private currentMovingNode: Node | null = null; // 当前正在移动的节点
 
-    private maxIterationsToFindNodesWithoutObstructedNodes: number = 10;
     private currentIterationToFindNodesWithoutObstructedNodes: number = 0;
 
     start() {
@@ -44,6 +48,14 @@ export class Main extends Component {
         this.currentIterationToFindNodesWithoutObstructedNodes = 0;
         this.generateNodesOBBV2();
         this.myOBBV2Nodes.forEach(node => {
+            const sprite = node.getComponent(Sprite)!;
+            const nodeScript = node.getComponent(NodeScript)!;
+            math.Color.fromHEX(sprite.color, nodeScript.directionColor)
+
+            const labelNode = node.children[0];
+            const label = labelNode.getComponent(Label)!;
+            label.string = `${node.name.replace('Rectangle', '')} ${nodeScript.directionSign}`;
+
             this.node.addChild(node);
         });
 
@@ -61,23 +73,6 @@ export class Main extends Component {
     // 生成节点集合
     generateNodesOBBV2() {
         const sceneSize = this.node.getComponent(UITransform)!.contentSize;
-
-        // 用箭头符号表示出上下左右
-        const arrowDirections = {
-            '↑': new Vec3(0, 1, 0),  // 上
-            '↓': new Vec3(0, -1, 0), // 下
-            '→': new Vec3(1, 0, 0),  // 右
-            '←': new Vec3(-1, 0, 0)  // 左
-        };
-        this.myOBBV2ArrowDirections = arrowDirections;
-        const arrowColors = {
-            '↑': math.Color.RED,
-            '↓': math.Color.YELLOW,
-            '→': math.Color.GREEN,
-            '←': math.Color.BLUE,
-        };
-        const arrows = Object.keys(arrowDirections);
-
         const nodes: Node[] = [];
         const rows = 7;
         const cols = 7;
@@ -90,18 +85,19 @@ export class Main extends Component {
         for (let i = 0; i < rows; i++) {
             for (let j = 0; j < cols; j++) {
                 let node: Node;
+                let nodeScript: NodeScript;
                 let uiTransform: UITransform;
                 let sprite: Sprite;
                 let position: Vec3;
                 let isIntersecting: boolean;
 
-                let cnt = 0;
                 do {
                     node = new Node(`Rectangle${i * cols + j + 1}`);
+                    nodeScript = node.addComponent(NodeScript);
+                    nodeScript.direction = nodeScript.randomPrimaryDirection; // 随机生成节点方向
 
                     sprite = node.addComponent(Sprite);
                     sprite.spriteFrame = this.node1.getComponent(Sprite)!.spriteFrame;
-                    sprite.color = math.Color.YELLOW;
 
                     uiTransform = node.getComponent(UITransform);
                     const randomWidth = baseNodeSize.width;// + randomRangeInt(-10, 10);
@@ -110,34 +106,8 @@ export class Main extends Component {
 
                     const labelNode = new Node(`Label${i * cols + j + 1}`);
                     const label = labelNode.addComponent(Label);
-
-                    // 1、当前待生成的节点，若其同一行的前面已经存在任一方向是向右的节点，则当前待生成的节点的方向不能是向左。
-                    // 2、当前待生成的节点，若其同一列的上面已经存在任一方向是向下的节点，则当前待生成的节点的方向不能是向上。
-                    let arrow: string;
-                    let validArrows = arrows.slice();
-                    // Check for existing nodes in the same row
-                    for (let k = 0; k < j; k++) {
-                        const leftNode = nodes[i * cols + k];
-                        const leftLabel = leftNode.children[0].getComponent(Label)!;
-                        const leftArrow = leftLabel.string.split(' ')[1];
-                        if (leftArrow === '→') {
-                            validArrows = validArrows.filter(a => a !== '←');
-                        }
-                    }
-                    // Check for existing nodes in the same column
-                    for (let l = 0; l < i; l++) {
-                        const topNode = nodes[l * cols + j];
-                        const topLabel = topNode.children[0].getComponent(Label)!;
-                        const topArrow = topLabel.string.split(' ')[1];
-                        if (topArrow === '↓') {
-                            validArrows = validArrows.filter(a => a !== '↑');
-                        }
-                    }
-                    arrow = validArrows[randomRangeInt(0, validArrows.length)];
-
-                    sprite.color = arrowColors[arrow]; // 颜色根据箭头符号设置
-                    label.string = `${i * cols + j + 1} ${arrow}`;
                     label.fontSize = 20;
+                    node.addChild(labelNode);
 
                     const randomOffsetX = randomRangeInt(-5, 5);
                     const randomOffsetY = randomRangeInt(-5, 5);
@@ -148,9 +118,7 @@ export class Main extends Component {
                     );
 
                     node.setPosition(position);
-                    node.addChild(labelNode);
                     isIntersecting = nodes.some(existingNode => OBBUtils.areNodesIntersecting(node, existingNode));
-                    cnt++; // 避免死循环
                 } while (isIntersecting);
 
                 nodes.push(node);
@@ -190,41 +158,19 @@ export class Main extends Component {
             node.setPosition(position.add(new Vec3(offsetX - 25, 0, 0)));
         });
 
-        // 更新节点颜色
-        nodes.forEach(node => {
-            const label = node.children[0].getComponent(Label)!;
-            const arrow = label.string.split(' ')[1];
-            const sprite = node.getComponent(Sprite)!;
-            sprite.color = arrowColors[arrow];
-        });
-
-        this.myOBBV2Nodes = nodes;
+        const nodesManager = new NodesManager(nodes, sceneSize);
 
         // 找出所有的无障碍节点
-        const allUnobstructedNodes = OBBUtils.findAllUnobstructedNodes(nodes, arrowDirections, sceneSize);
+        const allUnobstructedNodes = nodesManager.fixObstructedNodesDirection();
+        log(`nodes Nodes:`, nodes.map(node => node.name));
+        log(`全部无障碍节点集合 Nodes:`, allUnobstructedNodes.map(node => node.name));
+        // this.myOBBV2Nodes = nodes;
+        this.myOBBV2Nodes = allUnobstructedNodes;
         this.myOBBV2AllUnobstructedNodes = allUnobstructedNodes;
 
         // 找出所有的死障节点
         const allObscuredNodes = nodes.filter(node => !allUnobstructedNodes.includes(node));
-        console.log(`全部死障节点集合 Nodes:`, allObscuredNodes.map(node => node.name));
-
-        // 若死障节点集合不为空，则递归调用生成节点集合的方法，直到生成的节点集合中没有死障节点（为了避免死循环，设置一个最大迭代次数限制）
-        while (
-            allObscuredNodes.length > 0 &&
-            this.currentIterationToFindNodesWithoutObstructedNodes++ < this.maxIterationsToFindNodesWithoutObstructedNodes
-        ) {
-            log(`第 ${this.currentIterationToFindNodesWithoutObstructedNodes} 次重新生成节点集合`);
-            this.generateNodesOBBV2();
-        }
-        if (
-            allObscuredNodes.length == 0 ||
-            this.currentIterationToFindNodesWithoutObstructedNodes >= this.maxIterationsToFindNodesWithoutObstructedNodes
-        ) {
-            // 将生成的节点渲染到屏幕上
-            // this.myOBBV2Nodes.forEach(node => {
-            //     this.node.addChild(node);
-            // });
-        }
+        log(`全部死障节点集合 Nodes:`, allObscuredNodes.map(node => node.name));
     }
 
 
@@ -310,7 +256,7 @@ export class Main extends Component {
         this.myOBBV2NodesWithRotation = nodes;
 
         // 找出所有的无障碍节点
-        const allUnobstructedNodes = OBBUtils.findAllUnobstructedNodes(nodes, arrowDirections, sceneSize);
+        const allUnobstructedNodes = OBBUtils.findAllUnobstructedNodes(nodes, sceneSize);
         this.myOBBV2AllUnobstructedNodesWithRotation = allUnobstructedNodes;
 
         // 找出所有的死障节点
@@ -323,12 +269,9 @@ export class Main extends Component {
      */
     onClickMove() {
         this.myOBBV2Nodes.forEach(node => {
-            const label = node.children[0].getComponent(Label)!;
-            const arrow = label.string.split(' ')[1];
-            const direction = this.myOBBV2ArrowDirections[arrow];
-
-            const position = node.getPosition();
-            node.setPosition(position.add(direction));
+            const nodeScript = node.getComponent(NodeScript)!;
+            const currentPosition = node.getPosition();
+            node.setPosition(currentPosition.add(nodeScript.directionVector));
         });
     }
 
@@ -337,12 +280,9 @@ export class Main extends Component {
      */
     onClickMoveWithRotation() {
         this.myOBBV2NodesWithRotation.forEach(node => {
-            const label = node.children[0].getComponent(Label)!;
-            const arrow = label.string.split(' ')[1];
-            const direction = this.myOBBV2ArrowDirectionsWithRotation[arrow];
-
-            const position = node.getPosition();
-            node.setPosition(position.add(direction));
+            const nodeScript = node.getComponent(NodeScript)!;
+            const currentPosition = node.getPosition();
+            node.setPosition(currentPosition.add(nodeScript.directionVector));
         });
     }
 
@@ -366,9 +306,8 @@ export class Main extends Component {
             this.currentMovingNode = node;
         }
 
-        const label = this.currentMovingNode.children[0].getComponent(Label)!;
-        const arrow = label.string.split(' ')[1];
-        const direction: Vec3 = this.myOBBV2ArrowDirections[arrow];
+        const currentNodeScript = this.currentMovingNode.getComponent(NodeScript)!;
+        const direction: Vec3 = currentNodeScript.directionVector;
         const speed = 100;
         const speedyDirection = direction.clone().multiplyScalar(speed);
 
