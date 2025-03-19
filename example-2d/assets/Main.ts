@@ -1,5 +1,4 @@
-import { _decorator, Component, log, Node, Vec3, UITransform, Size, randomRangeInt, Sprite, math, Label, SpriteFrame, resources } from 'cc';
-import { OBBUtils } from './OBBUtils';
+import { _decorator, Component, log, Node, UITransform, Sprite } from 'cc';
 import { NodeScript } from './NodeScript';
 import { NodesManager } from './NodesManager';
 import { NodesRenderer } from './NodesRenderer';

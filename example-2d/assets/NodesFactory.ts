@@ -14,7 +14,7 @@ export class NodesFactory {
         const nodes: Node[] = [];
         const baseNodeSize = new Size(60, 60);
         const spacing = 30;
-        const counterClockwiseRotationDegree = 45;
+        const counterClockwiseRotationDegree = 0;
 
         const startX = -((cols - 1) * (baseNodeSize.width + spacing)) / 2;
         const startY = ((rows - 1) * (baseNodeSize.height + spacing)) / 2;
