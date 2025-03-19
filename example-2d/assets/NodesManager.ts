@@ -73,19 +73,6 @@ export class NodesManager {
     }
 
     /**
-     * 获取原始节点集合的最外层无障碍节点集合
-     */
-    private findOutermostUnobstructedOriginalNodes(): Node[] {
-        const unobstructedNodes: Node[] = [];
-        for (const node of this.originalNodes) {
-            if (this.isUnobstructedNode(node)) {
-                unobstructedNodes.push(node);
-            }
-        }
-        return unobstructedNodes;
-    }
-
-    /**
     * 判定节点是否为无障碍节点
     * 
     * @param node 要判定的节点
@@ -107,21 +94,34 @@ export class NodesManager {
             ) {
                 log(`节点${node.name}是无障碍节点 at position: ${currentPos}`);
                 node.setPosition(originalPos); // 恢复原位置
-                node.updateWorldTransform(); // 强制更新节点的变换矩阵（强制刷新节点新位置）
+                // node.updateWorldTransform(); // 强制更新节点的变换矩阵（强制刷新节点新位置）
                 return true;
             }
 
             node.setPosition(currentPos);
-            node.updateWorldTransform(); // 强制更新节点的变换矩阵（强制刷新节点新位置）
+            // node.updateWorldTransform(); // 强制更新节点的变换矩阵（强制刷新节点新位置）
 
             for (const otherNode of this.tmpNodes) {
                 if (otherNode !== node && OBBUtils.areNodesIntersecting(node, otherNode)) {
                     log(`节点${node.name}被阻挡 at position: ${currentPos}, otherNode: ${otherNode.name}|${otherNode.getPosition()}`);
                     node.setPosition(originalPos); // 恢复原位置
-                    node.updateWorldTransform(); // 强制更新节点的变换矩阵（强制刷新节点新位置）
+                    // node.updateWorldTransform(); // 强制更新节点的变换矩阵（强制刷新节点新位置）
                     return false;
                 }
             }
         }
+    }
+
+    /**
+     * 获取原始节点集合的最外层无障碍节点集合
+     */
+    private findOutermostUnobstructedOriginalNodes(): Node[] {
+        const unobstructedNodes: Node[] = [];
+        for (const node of this.originalNodes) {
+            if (this.isUnobstructedNode(node)) {
+                unobstructedNodes.push(node);
+            }
+        }
+        return unobstructedNodes;
     }
 }

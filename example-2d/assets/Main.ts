@@ -2,6 +2,7 @@ import { _decorator, Component, log, Node, Vec3, UITransform, Size, randomRangeI
 import { OBBUtils } from './OBBUtils';
 import { NodeScript } from './NodeScript';
 import { NodesManager } from './NodesManager';
+import { NodesRenderer } from './NodesRenderer';
 const { ccclass, property } = _decorator;
 
 // 造成死障的原因：
@@ -39,28 +40,10 @@ export class Main extends Component {
     private autoMoveOnUpdate: boolean = false; // 是否在update中自动移动节点
     private currentMovingNode: Node | null = null; // 当前正在移动的节点
 
-    private currentIterationToFindNodesWithoutObstructedNodes: number = 0;
-
     start() {
-        // this.testNodesOBBIntersecting();
-
-
-        this.currentIterationToFindNodesWithoutObstructedNodes = 0;
-        this.generateNodesOBBV2();
-        this.myOBBV2Nodes.forEach(node => {
-            const sprite = node.getComponent(Sprite)!;
-            const nodeScript = node.getComponent(NodeScript)!;
-            math.Color.fromHEX(sprite.color, nodeScript.directionColor)
-
-            const labelNode = node.children[0];
-            const label = labelNode.getComponent(Label)!;
-            label.string = `${node.name.replace('Rectangle', '')} ${nodeScript.directionSign}`;
-
-            this.node.addChild(node);
-        });
-
-
-        // this.testOBBV2WithRotation();
+        const nodesManager: NodesManager = this.generateNodesOBBV2();
+        const nodesRenderer: NodesRenderer = new NodesRenderer(this.node, nodesManager);
+        nodesRenderer.render();
     }
 
     update(deltaTime: number) {
@@ -71,7 +54,7 @@ export class Main extends Component {
     }
 
     // 生成节点集合
-    generateNodesOBBV2() {
+    generateNodesOBBV2(): NodesManager {
         const sceneSize = this.node.getComponent(UITransform)!.contentSize;
         const nodes: Node[] = [];
         const rows = 7;
@@ -171,6 +154,8 @@ export class Main extends Component {
         // 找出所有的死障节点
         const allObscuredNodes = nodes.filter(node => !allUnobstructedNodes.includes(node));
         log(`全部死障节点集合 Nodes:`, allObscuredNodes.map(node => node.name));
+
+        return nodesManager;
     }
 
 
@@ -255,13 +240,13 @@ export class Main extends Component {
 
         this.myOBBV2NodesWithRotation = nodes;
 
-        // 找出所有的无障碍节点
-        const allUnobstructedNodes = OBBUtils.findAllUnobstructedNodes(nodes, sceneSize);
-        this.myOBBV2AllUnobstructedNodesWithRotation = allUnobstructedNodes;
+        // // 找出所有的无障碍节点
+        // const allUnobstructedNodes = OBBUtils.findAllUnobstructedNodes(nodes, sceneSize);
+        // this.myOBBV2AllUnobstructedNodesWithRotation = allUnobstructedNodes;
 
-        // 找出所有的死障节点
-        const allObscuredNodes = nodes.filter(node => !allUnobstructedNodes.includes(node));
-        console.log(`全部死障节点集合 Nodes:`, allObscuredNodes.map(node => node.name));
+        // // 找出所有的死障节点
+        // const allObscuredNodes = nodes.filter(node => !allUnobstructedNodes.includes(node));
+        // console.log(`全部死障节点集合 Nodes:`, allObscuredNodes.map(node => node.name));
     }
 
     /**
