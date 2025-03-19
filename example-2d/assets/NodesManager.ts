@@ -21,23 +21,23 @@ export class NodesManager {
      * 修正被障碍节点的方向
      */
     fixObstructedNodesDirection(): Node[] {
-        let index = 0;
+        let cnt = 0;
         let unobstructedNodes: Node[] = [];
         while (this.hasObstructedTmpNodes()) {
-            index++;
-            if (index > 100) {
+            cnt++;
+            if (cnt > 500) { // 避免死循环（尝试多次依然有障碍节点）
                 break;
             }
 
             unobstructedNodes = this.transferOutermostUnobstructedTmpNodes();
-            log(`fixObstructedNodesDirection [${index}] 无障碍节点集合:`, unobstructedNodes.map(node => node.name));
+            log(`fixObstructedNodesDirection [${cnt}] 无障碍节点集合:`, unobstructedNodes.map(node => node.name));
             if (unobstructedNodes.length > 0) {
                 continue;
             }
 
             if (this.hasObstructedTmpNodes()) {
                 const tmpObstructedNode = this.tmpNodes[0];
-                log(`fixObstructedNodesDirection [${index}] 反转被障碍节点方向:`, tmpObstructedNode.name);
+                log(`fixObstructedNodesDirection [${cnt}] 反转被障碍节点方向:`, tmpObstructedNode.name);
                 tmpObstructedNode.getComponent(NodeScript).reverseDirection();
             }
         }

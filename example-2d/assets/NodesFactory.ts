@@ -13,7 +13,7 @@ export class NodesFactory {
     static generate(movementAreaSize: Size, rows: number, cols: number): NodesManager {
         const nodes: Node[] = [];
         const baseNodeSize = new Size(60, 60);
-        const spacing = 10;
+        const spacing = 30;
 
         const startX = -((cols - 1) * (baseNodeSize.width + spacing)) / 2;
         const startY = ((rows - 1) * (baseNodeSize.height + spacing)) / 2;
@@ -28,7 +28,12 @@ export class NodesFactory {
 
                 let cnt = 0;
                 do {
-                    node = new Node(`Rectangle${i * cols + j + 1}`);
+                    cnt++;
+                    if (cnt > 1000) { // 避免死循环（尝试多次依然被其他节点障碍）
+                        break;
+                    }
+
+                    node = new Node(`Node${i * cols + j + 1}`);
                     nodeScript = node.addComponent(NodeScript);
                     // nodeScript.direction = nodeScript.randomPrimaryDirection; // 随机生成节点方向
                     nodeScript.direction = nodeScript.randomSecondaryDirection; // 随机生成节点方向
@@ -60,7 +65,7 @@ export class NodesFactory {
 
                     node.setPosition(position);
                     isIntersecting = nodes.some(existingNode => OBBUtils.areNodesIntersecting(node, existingNode));
-                } while (isIntersecting && cnt++ < 10);
+                } while (isIntersecting);
 
                 nodes.push(node);
             }

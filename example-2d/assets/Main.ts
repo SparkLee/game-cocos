@@ -45,7 +45,6 @@ export class Main extends Component {
 
     update(deltaTime: number) {
         if (this.autoMoveOnUpdate) {
-            // this.onClickMove();
             this.nodesRenderer.moveOneNodeOneStep();
         }
     }
