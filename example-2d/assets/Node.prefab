@@ -36,8 +36,8 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 0,
-      "y": 0,
+      "x": -540,
+      "y": -360.00000000000006,
       "z": 0
     },
     "_lrot": {
@@ -220,7 +220,7 @@
       "b": 0,
       "a": 255
     },
-    "_string": "mybutton",
+    "_string": "你的按钮",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 20,
@@ -601,7 +601,6 @@
       "__id__": 0
     },
     "fileId": "c46/YsCPVOJYA4mWEpNYRx",
-    "instance": null,
     "targetOverrides": null
   }
 ]
