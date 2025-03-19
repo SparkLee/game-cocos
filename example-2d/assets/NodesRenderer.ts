@@ -40,6 +40,9 @@ export class NodesRenderer {
         });
     }
 
+    /**
+     * 清除所有已渲染节点，方便重新生成并渲染
+     */
     clear() {
         this.nodesManager.unObstructedNodes.forEach(node => {
             node.destroy();

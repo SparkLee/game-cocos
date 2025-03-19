@@ -73,7 +73,7 @@ export class NodeScript extends Component {
     get randomPrimaryDirection(): number { // 获取随机主方向（上、下、左、右）
         return math.randomRangeInt(NodeDirection.Up, NodeDirection.Right + 1);
     }
-    get randomIntercardinalDirection(): number { // 
+    get randomSecondaryDirection(): number { // 获取随机次方向（东北、西北、东南、西南）
         return math.randomRangeInt(NodeDirection.NorthEast, NodeDirection.SouthWest + 1);
     }
     get directionColor(): string { // 获取节点方向颜色

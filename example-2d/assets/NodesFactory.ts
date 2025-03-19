@@ -1,4 +1,4 @@
-import { Label, log, randomRangeInt, Size, UITransform, Vec3, Node } from "cc";
+import { Label, log, randomRangeInt, Size, UITransform, Vec3, Node, math } from "cc";
 import { NodesManager } from "./NodesManager";
 import { NodeScript } from "./NodeScript";
 import { OBBUtils } from "./OBBUtils";
@@ -26,10 +26,12 @@ export class NodesFactory {
                 let position: Vec3;
                 let isIntersecting: boolean;
 
+                let cnt = 0;
                 do {
                     node = new Node(`Rectangle${i * cols + j + 1}`);
                     nodeScript = node.addComponent(NodeScript);
-                    nodeScript.direction = nodeScript.randomPrimaryDirection; // 随机生成节点方向
+                    // nodeScript.direction = nodeScript.randomPrimaryDirection; // 随机生成节点方向
+                    nodeScript.direction = nodeScript.randomSecondaryDirection; // 随机生成节点方向
 
                     uiTransform = node.addComponent(UITransform);
                     const randomWidth = baseNodeSize.width;// + randomRangeInt(-10, 10);
@@ -39,6 +41,13 @@ export class NodesFactory {
                     const labelNode = new Node(`Label${i * cols + j + 1}`);
                     const label = labelNode.addComponent(Label);
                     label.fontSize = 20;
+
+                    // 根据箭头方向旋转节点
+                    const direction = nodeScript.directionVector;
+                    const angle = Math.atan2(direction.y, direction.x) * math.toDegree(1);
+                    node.setRotationFromEuler(0, 0, angle);
+                    labelNode.setRotationFromEuler(0, 0, -angle); // label展示文字要保持箭头方向不变，所以要逆向旋转
+
                     node.addChild(labelNode);
 
                     const randomOffsetX = randomRangeInt(-5, 5);
@@ -51,7 +60,7 @@ export class NodesFactory {
 
                     node.setPosition(position);
                     isIntersecting = nodes.some(existingNode => OBBUtils.areNodesIntersecting(node, existingNode));
-                } while (isIntersecting);
+                } while (isIntersecting && cnt++ < 10);
 
                 nodes.push(node);
             }
@@ -92,15 +101,10 @@ export class NodesFactory {
 
         const nodesManager = new NodesManager(nodes, movementAreaSize);
 
-        // 找出所有的无障碍节点
         const allUnobstructedNodes = nodesManager.fixObstructedNodesDirection();
         log(`nodes Nodes:`, nodes.map(node => node.name));
         log(`全部无障碍节点集合 Nodes:`, allUnobstructedNodes.map(node => node.name));
-        // this.myOBBV2Nodes = nodes;
-        // this.myOBBV2Nodes = allUnobstructedNodes;
-        // this.myOBBV2AllUnobstructedNodes = allUnobstructedNodes;
 
-        // 找出所有的死障节点
         const allObscuredNodes = nodes.filter(node => !allUnobstructedNodes.includes(node));
         log(`全部死障节点集合 Nodes:`, allObscuredNodes.map(node => node.name));
 
