@@ -1,8 +1,9 @@
-import { _decorator, Component, log, Node, Vec3, UITransform, Size, randomRangeInt, Sprite, math, Label } from 'cc';
+import { _decorator, Component, log, Node, Vec3, UITransform, Size, randomRangeInt, Sprite, math, Label, SpriteFrame, resources } from 'cc';
 import { OBBUtils } from './OBBUtils';
 import { NodeScript } from './NodeScript';
 import { NodesManager } from './NodesManager';
 import { NodesRenderer } from './NodesRenderer';
+import { NodesFactory } from './NodesFactory';
 const { ccclass, property } = _decorator;
 
 // 造成死障的原因：
@@ -26,138 +27,43 @@ const { ccclass, property } = _decorator;
 export class Main extends Component {
     @property(Node)
     public node1: Node | null = null;
-
     @property(Node)
     public node2: Node | null = null;
 
     public myOBBV2Nodes: Node[] = [];
-    public myOBBV2AllUnobstructedNodes: Node[] = [];
 
     public myOBBV2NodesWithRotation: Node[] = [];
     public myOBBV2ArrowDirectionsWithRotation: object = {};
     public myOBBV2AllUnobstructedNodesWithRotation: Node[] = [];
 
+    private nodesRenderer: NodesRenderer = null;
     private autoMoveOnUpdate: boolean = false; // 是否在update中自动移动节点
-    private currentMovingNode: Node | null = null; // 当前正在移动的节点
 
     start() {
-        const nodesManager: NodesManager = this.generateNodesOBBV2();
-        const nodesRenderer: NodesRenderer = new NodesRenderer(this.node, nodesManager);
-        nodesRenderer.render();
+        this.showIt();
     }
 
     update(deltaTime: number) {
         if (this.autoMoveOnUpdate) {
             // this.onClickMove();
-            this.moveOneByOne();
+            this.nodesRenderer.moveOneNodeOneStep();
         }
     }
 
-    // 生成节点集合
-    generateNodesOBBV2(): NodesManager {
-        const sceneSize = this.node.getComponent(UITransform)!.contentSize;
-        const nodes: Node[] = [];
-        const rows = 7;
-        const cols = 7;
-        const baseNodeSize = new Size(60, 60);
-        const spacing = 10;
-
-        const startX = -((cols - 1) * (baseNodeSize.width + spacing)) / 2;
-        const startY = ((rows - 1) * (baseNodeSize.height + spacing)) / 2;
-
-        for (let i = 0; i < rows; i++) {
-            for (let j = 0; j < cols; j++) {
-                let node: Node;
-                let nodeScript: NodeScript;
-                let uiTransform: UITransform;
-                let sprite: Sprite;
-                let position: Vec3;
-                let isIntersecting: boolean;
-
-                do {
-                    node = new Node(`Rectangle${i * cols + j + 1}`);
-                    nodeScript = node.addComponent(NodeScript);
-                    nodeScript.direction = nodeScript.randomPrimaryDirection; // 随机生成节点方向
-
-                    sprite = node.addComponent(Sprite);
-                    sprite.spriteFrame = this.node1.getComponent(Sprite)!.spriteFrame;
-
-                    uiTransform = node.getComponent(UITransform);
-                    const randomWidth = baseNodeSize.width;// + randomRangeInt(-10, 10);
-                    const randomHeight = baseNodeSize.height;// + randomRangeInt(-10, 10);
-                    uiTransform.setContentSize(new Size(randomWidth, randomHeight));
-
-                    const labelNode = new Node(`Label${i * cols + j + 1}`);
-                    const label = labelNode.addComponent(Label);
-                    label.fontSize = 20;
-                    node.addChild(labelNode);
-
-                    const randomOffsetX = randomRangeInt(-5, 5);
-                    const randomOffsetY = randomRangeInt(-5, 5);
-                    position = new Vec3(
-                        startX + j * (baseNodeSize.width + spacing) + randomOffsetX,
-                        startY - i * (baseNodeSize.height + spacing) + randomOffsetY,
-                        0
-                    );
-
-                    node.setPosition(position);
-                    isIntersecting = nodes.some(existingNode => OBBUtils.areNodesIntersecting(node, existingNode));
-                } while (isIntersecting);
-
-                nodes.push(node);
-            }
+    showIt() {
+        if (this.nodesRenderer) {
+            this.nodesRenderer.clear();
         }
 
-        // 上边对齐：生成所有节点后，再将首行所有节靠顶边对齐
-        const topNodes = nodes.filter((node, index) => index < cols);
-        topNodes.forEach((node) => {
-            const uiTransform = node.getComponent(UITransform)!;
-            const position = node.getPosition();
-            const offsetY = startY - (position.y + uiTransform.height / 2);
-            node.setPosition(position.add(new Vec3(0, offsetY + 40, 0)));
-        });
-        // 下边对齐：生成所有节点后，再将末行所有节靠底边对齐
-        const bottomNodes = nodes.filter((node, index) => index >= (rows - 1) * cols);
-        bottomNodes.forEach((node) => {
-            const uiTransform = node.getComponent(UITransform)!;
-            const position = node.getPosition();
-            const offsetY = startY - (position.y - uiTransform.height / 2) - (rows - 1) * (baseNodeSize.height + spacing);
-            node.setPosition(position.add(new Vec3(0, offsetY - 30, 0)));
-        });
-        // 左边对齐：生成所有节点后，再将最左侧所有节点的左侧边对齐
-        const leftNodes = nodes.filter((node, index) => index % cols === 0);
-        leftNodes.forEach((node) => {
-            const uiTransform = node.getComponent(UITransform)!;
-            const position = node.getPosition();
-            const offsetX = startX - (position.x - uiTransform.width / 2);
-            node.setPosition(position.add(new Vec3(offsetX - 40, 0, 0)));
-        });
-        // 右边对齐：生成所有节点后，再将最右侧所有节点的右侧边对齐
-        const rightNodes = nodes.filter((node, index) => index % cols === cols - 1);
-        rightNodes.forEach((node) => {
-            const uiTransform = node.getComponent(UITransform)!;
-            const position = node.getPosition();
-            const offsetX = startX + cols * (baseNodeSize.width + spacing) - (position.x + uiTransform.width / 2);
-            node.setPosition(position.add(new Vec3(offsetX - 25, 0, 0)));
-        });
+        const nodeSpritFrame = this.node1!.getComponent(Sprite)!.spriteFrame;
+        const movementAreaSize = this.node.getComponent(UITransform)!.contentSize;
 
-        const nodesManager = new NodesManager(nodes, sceneSize);
+        const nodesManager: NodesManager = NodesFactory.generate(movementAreaSize, 7, 7);
+        const nodesRenderer: NodesRenderer = new NodesRenderer(this.node, nodesManager, nodeSpritFrame);
+        nodesRenderer.render();
 
-        // 找出所有的无障碍节点
-        const allUnobstructedNodes = nodesManager.fixObstructedNodesDirection();
-        log(`nodes Nodes:`, nodes.map(node => node.name));
-        log(`全部无障碍节点集合 Nodes:`, allUnobstructedNodes.map(node => node.name));
-        // this.myOBBV2Nodes = nodes;
-        this.myOBBV2Nodes = allUnobstructedNodes;
-        this.myOBBV2AllUnobstructedNodes = allUnobstructedNodes;
-
-        // 找出所有的死障节点
-        const allObscuredNodes = nodes.filter(node => !allUnobstructedNodes.includes(node));
-        log(`全部死障节点集合 Nodes:`, allObscuredNodes.map(node => node.name));
-
-        return nodesManager;
+        this.nodesRenderer = nodesRenderer;
     }
-
 
     testOBBV2WithRotation() {
         const sceneSize = this.node.getComponent(UITransform)!.contentSize;
@@ -274,50 +180,5 @@ export class Main extends Component {
     switchAutoMoveOnUpdate() {
         this.autoMoveOnUpdate = !this.autoMoveOnUpdate;
         log(`autoMoveOnUpdate: ${this.autoMoveOnUpdate}`);
-    }
-
-
-    moveOneByOne() {
-        // 若没有需要移动的剩余节点并且当前没有正在移动的节点，则直接返回，不执行任何移动操作。
-        if ((this.myOBBV2AllUnobstructedNodes.length === 0) && this.currentMovingNode === null) {
-            return;
-        }
-
-        if (this.currentMovingNode === null) {
-            if (this.myOBBV2AllUnobstructedNodes.length === 0) {
-                return; // 没有需要移动的节点
-            }
-            const node = this.myOBBV2AllUnobstructedNodes.shift()!;
-            this.currentMovingNode = node;
-        }
-
-        const currentNodeScript = this.currentMovingNode.getComponent(NodeScript)!;
-        const direction: Vec3 = currentNodeScript.directionVector;
-        const speed = 100;
-        const speedyDirection = direction.clone().multiplyScalar(speed);
-
-        const position = this.currentMovingNode.getPosition();
-        this.currentMovingNode.setPosition(position.add(speedyDirection));
-        const sceneSize = this.node.getComponent(UITransform)!.contentSize;
-        const currentPos = this.currentMovingNode.getPosition();
-        if (
-            currentPos.x < -sceneSize.width / 2 ||
-            currentPos.x > sceneSize.width / 2 ||
-            currentPos.y < -sceneSize.height / 2 ||
-            currentPos.y > sceneSize.height / 2
-        ) {
-            // 将移出边界的节点根据其移动方向重新放回到屏幕的侧边，方便调试查看
-            if (currentPos.x < -sceneSize.width / 2) {
-                this.currentMovingNode.setPosition(new Vec3(-sceneSize.width / 2 + 20, currentPos.y, 0));
-            } else if (currentPos.x > sceneSize.width / 2) {
-                this.currentMovingNode.setPosition(new Vec3(sceneSize.width / 2 - 20, currentPos.y, 0));
-            } else if (currentPos.y < -sceneSize.height / 2) {
-                this.currentMovingNode.setPosition(new Vec3(currentPos.x, -sceneSize.height / 2 + 20, 0));
-            } else if (currentPos.y > sceneSize.height / 2) {
-                this.currentMovingNode.setPosition(new Vec3(currentPos.x, sceneSize.height / 2 - 20, 0));
-            }
-
-            this.currentMovingNode = null; // 移出边界后，将当前移动的节点置为null，并继续移动下一个节点
-        }
     }
 }
