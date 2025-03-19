@@ -70,7 +70,7 @@ export class NodesRenderer {
 
         const currentNodeScript = this.currentMovingNode.getComponent(NodeScript)!;
         const direction: Vec3 = currentNodeScript.directionVector;
-        const speed = 100;
+        const speed = 50;
         const speedyDirection = direction.clone().multiplyScalar(speed);
 
         const position = this.currentMovingNode.getPosition();

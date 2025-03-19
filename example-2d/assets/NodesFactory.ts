@@ -14,6 +14,7 @@ export class NodesFactory {
         const nodes: Node[] = [];
         const baseNodeSize = new Size(60, 60);
         const spacing = 30;
+        const counterClockwiseRotationDegree = 45;
 
         const startX = -((cols - 1) * (baseNodeSize.width + spacing)) / 2;
         const startY = ((rows - 1) * (baseNodeSize.height + spacing)) / 2;
@@ -35,8 +36,8 @@ export class NodesFactory {
 
                     node = new Node(`Node${i * cols + j + 1}`);
                     nodeScript = node.addComponent(NodeScript);
-                    // nodeScript.direction = nodeScript.randomPrimaryDirection; // 随机生成节点方向
-                    nodeScript.direction = nodeScript.randomSecondaryDirection; // 随机生成节点方向
+                    nodeScript.direction = nodeScript.randomDirection; // 随机生成节点方向
+                    nodeScript.counterClockwiseRotationDegree = counterClockwiseRotationDegree; // 逆时针旋转角度
 
                     uiTransform = node.addComponent(UITransform);
                     const randomWidth = baseNodeSize.width;// + randomRangeInt(-10, 10);
@@ -46,12 +47,6 @@ export class NodesFactory {
                     const labelNode = new Node(`Label${i * cols + j + 1}`);
                     const label = labelNode.addComponent(Label);
                     label.fontSize = 20;
-
-                    // 根据箭头方向旋转节点
-                    const direction = nodeScript.directionVector;
-                    const angle = Math.atan2(direction.y, direction.x) * math.toDegree(1);
-                    node.setRotationFromEuler(0, 0, angle);
-                    labelNode.setRotationFromEuler(0, 0, -angle); // label展示文字要保持箭头方向不变，所以要逆向旋转
 
                     node.addChild(labelNode);
 
@@ -71,38 +66,8 @@ export class NodesFactory {
             }
         }
 
-        // // 上边对齐：生成所有节点后，再将首行所有节靠顶边对齐
-        // const topNodes = nodes.filter((node, index) => index < cols);
-        // topNodes.forEach((node) => {
-        //     const uiTransform = node.getComponent(UITransform)!;
-        //     const position = node.getPosition();
-        //     const offsetY = startY - (position.y + uiTransform.height / 2);
-        //     node.setPosition(position.add(new Vec3(0, offsetY + 40, 0)));
-        // });
-        // // 下边对齐：生成所有节点后，再将末行所有节靠底边对齐
-        // const bottomNodes = nodes.filter((node, index) => index >= (rows - 1) * cols);
-        // bottomNodes.forEach((node) => {
-        //     const uiTransform = node.getComponent(UITransform)!;
-        //     const position = node.getPosition();
-        //     const offsetY = startY - (position.y - uiTransform.height / 2) - (rows - 1) * (baseNodeSize.height + spacing);
-        //     node.setPosition(position.add(new Vec3(0, offsetY - 30, 0)));
-        // });
-        // // 左边对齐：生成所有节点后，再将最左侧所有节点的左侧边对齐
-        // const leftNodes = nodes.filter((node, index) => index % cols === 0);
-        // leftNodes.forEach((node) => {
-        //     const uiTransform = node.getComponent(UITransform)!;
-        //     const position = node.getPosition();
-        //     const offsetX = startX - (position.x - uiTransform.width / 2);
-        //     node.setPosition(position.add(new Vec3(offsetX - 40, 0, 0)));
-        // });
-        // // 右边对齐：生成所有节点后，再将最右侧所有节点的右侧边对齐
-        // const rightNodes = nodes.filter((node, index) => index % cols === cols - 1);
-        // rightNodes.forEach((node) => {
-        //     const uiTransform = node.getComponent(UITransform)!;
-        //     const position = node.getPosition();
-        //     const offsetX = startX + cols * (baseNodeSize.width + spacing) - (position.x + uiTransform.width / 2);
-        //     node.setPosition(position.add(new Vec3(offsetX - 25, 0, 0)));
-        // });
+        // 边缘节点对齐摆放
+        // NodesFactory.alignEdgeNodes(nodes, baseNodeSize, cols, rows, spacing, startX, startY);
 
         const nodesManager = new NodesManager(nodes, movementAreaSize);
 
@@ -114,5 +79,40 @@ export class NodesFactory {
         log(`全部死障节点集合 Nodes:`, allObscuredNodes.map(node => node.name));
 
         return nodesManager;
+    }
+
+    private static alignEdgeNodes(nodes: Node[], baseNodeSize: Size, cols: number, rows: number, spacing: number, startX: number, startY: number) {
+        // 上边对齐：生成所有节点后，再将首行所有节靠顶边对齐
+        const topNodes = nodes.filter((node, index) => index < cols);
+        topNodes.forEach((node) => {
+            const uiTransform = node.getComponent(UITransform)!;
+            const position = node.getPosition();
+            const offsetY = startY - (position.y + uiTransform.height / 2);
+            node.setPosition(position.add(new Vec3(0, offsetY + 40, 0)));
+        });
+        // 下边对齐：生成所有节点后，再将末行所有节靠底边对齐
+        const bottomNodes = nodes.filter((node, index) => index >= (rows - 1) * cols);
+        bottomNodes.forEach((node) => {
+            const uiTransform = node.getComponent(UITransform)!;
+            const position = node.getPosition();
+            const offsetY = startY - (position.y - uiTransform.height / 2) - (rows - 1) * (baseNodeSize.height + spacing);
+            node.setPosition(position.add(new Vec3(0, offsetY - 30, 0)));
+        });
+        // 左边对齐：生成所有节点后，再将最左侧所有节点的左侧边对齐
+        const leftNodes = nodes.filter((node, index) => index % cols === 0);
+        leftNodes.forEach((node) => {
+            const uiTransform = node.getComponent(UITransform)!;
+            const position = node.getPosition();
+            const offsetX = startX - (position.x - uiTransform.width / 2);
+            node.setPosition(position.add(new Vec3(offsetX - 40, 0, 0)));
+        });
+        // 右边对齐：生成所有节点后，再将最右侧所有节点的右侧边对齐
+        const rightNodes = nodes.filter((node, index) => index % cols === cols - 1);
+        rightNodes.forEach((node) => {
+            const uiTransform = node.getComponent(UITransform)!;
+            const position = node.getPosition();
+            const offsetX = startX + cols * (baseNodeSize.width + spacing) - (position.x + uiTransform.width / 2);
+            node.setPosition(position.add(new Vec3(offsetX - 25, 0, 0)));
+        });
     }
 }

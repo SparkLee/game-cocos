@@ -25,7 +25,7 @@ export class NodesManager {
         let unobstructedNodes: Node[] = [];
         while (this.hasObstructedTmpNodes()) {
             cnt++;
-            if (cnt > 500) { // 避免死循环（尝试多次依然有障碍节点）
+            if (cnt > 100) { // 避免死循环（尝试多次依然有障碍节点）
                 break;
             }
 
