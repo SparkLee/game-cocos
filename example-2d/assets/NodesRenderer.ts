@@ -51,18 +51,20 @@ export class NodesRenderer {
 
     /**
      * 每帧移动一个节点前进一步
+     * 
+     * @returns 是否所有节点都已经移动完成
      */
-    moveOneNodeOneStep() {
+    moveOneNodeOneStep(): boolean {
         const unObstructedNodes = this.nodesManager.unObstructedNodes;
 
         // 若没有需要移动的剩余节点并且当前没有正在移动的节点，则直接返回。
         if ((unObstructedNodes.length === 0) && this.currentMovingNode === null) {
-            return;
+            return true;
         }
 
         if (this.currentMovingNode === null) {
             if (unObstructedNodes.length === 0) {
-                return; // 没有需要移动的节点
+                return true; // 没有需要移动的节点
             }
             const node = unObstructedNodes.shift()!;
             this.currentMovingNode = node;
@@ -96,5 +98,6 @@ export class NodesRenderer {
 
             this.currentMovingNode = null; // 移出边界后，将当前移动的节点置为null，并继续移动下一个节点
         }
+        return false;
     }
 }
