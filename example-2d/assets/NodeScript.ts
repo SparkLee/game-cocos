@@ -1,4 +1,4 @@
-import { _decorator, Component, Enum, log, math, misc, Vec3 } from 'cc';
+import { _decorator, Component, log, math, Sprite, Vec3 } from 'cc';
 const { ccclass, property } = _decorator;
 
 // 节点方向枚举
@@ -100,7 +100,13 @@ export class NodeScript extends Component {
      */
     reverseDirection() {
         // this.logNodeInfo();
+
+        // 反转方向
         this.direction = this.oppositeDirection;
+
+        // 同时更新归属节点的方向颜色
+        math.Color.fromHEX(this.node.getComponent(Sprite).color, this.directionColor);
+
         // this.logNodeInfo();
     }
 
