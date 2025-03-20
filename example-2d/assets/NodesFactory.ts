@@ -1,4 +1,4 @@
-import { Label, log, Size, UITransform, Vec3, Node, instantiate, Sprite, math } from "cc";
+import { Label, log, Size, UITransform, Vec3, Node, instantiate, Sprite, math, randomRangeInt } from "cc";
 import { NodesManager } from "./NodesManager";
 import { NodeScript } from "./NodeScript";
 import { OBBUtils } from "./OBBUtils";
@@ -17,7 +17,7 @@ export class NodesFactory {
         // 1、不旋转时，spacing最小可以为0，节点大小可以任意，长宽比任意。
         // 2、旋转45度，节点大小33*33时，spacing最小要为14，否则就会出现死障节点。
         // 3、旋转45度，节点大小60*60时，spacing最小要为25，否则就会出现死障节点。
-        const spacing = 25;
+        const spacing = 30;
         const baseNodeSize = new Size(60, 60);     // 节点大小尺寸
         const counterClockwiseRotationDegree = 45; // 节点逆时针旋转角度
 
@@ -81,8 +81,11 @@ export class NodesFactory {
     }
 
     private setNodeUITransformAndLabelNode(node: Node, baseNodeSize: Size) {
-        const randomWidth = baseNodeSize.width; // + randomRangeInt(-10, 10);
-        const randomHeight = baseNodeSize.height; // + randomRangeInt(-10, 10);
+        // 可任意缩小节点尺寸，但不可放大，否则会出现死障节点
+        // const randomWidth = baseNodeSize.width + randomRangeInt(-baseNodeSize.width / 2, 0);
+        // const randomHeight = baseNodeSize.height + randomRangeInt(-baseNodeSize.height / 2, 0);
+        const randomWidth = [baseNodeSize.width, baseNodeSize.width / 2][randomRangeInt(0, 2)];
+        const randomHeight = [baseNodeSize.height, baseNodeSize.height / 2][randomRangeInt(0, 2)];
         (node.getComponent(UITransform)).setContentSize(new Size(randomWidth, randomHeight));
 
         const label = node.children[0].getComponent(Label);
