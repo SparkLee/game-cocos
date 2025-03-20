@@ -1,4 +1,4 @@
-import { _decorator, Component, log, Node, UITransform, Sprite, EventKeyboard, macro, systemEvent, SystemEvent, input, Input, KeyCode } from 'cc';
+import { _decorator, Component, log, Node, UITransform, EventKeyboard, input, Input, KeyCode } from 'cc';
 import { NodesManager } from './NodesManager';
 import { NodesRenderer } from './NodesRenderer';
 import { NodesFactory } from './NodesFactory';
@@ -6,15 +6,30 @@ const { ccclass, property } = _decorator;
 
 @ccclass('Main')
 export class Main extends Component {
+    // 模板节点（在Cocos编辑器中手动创建Button UI组件做为模板节点【自动绑定了各种方便使用的组件：cc.UITransform, cc.Sprite, cc.Button，还会自动创建 Label 子节点，这一波东西要用代码创建还是很冗长的】）
+    @property(Node)
+    public templateNode: Node | null = null;
+
     @property(Node)
     public node1: Node | null = null;
     @property(Node)
     public node2: Node | null = null;
 
+    private nodesFactory: NodesFactory = new NodesFactory();
     private autoMoveOnUpdate: boolean = false; // 是否在update中自动移动节点
     private nodesRenderer: NodesRenderer = null;
 
+    onLoad() {
+        input.on(Input.EventType.KEY_DOWN, this.onKeyDown, this);
+    }
+
+    onDestroy() {
+        input.off(Input.EventType.KEY_DOWN, this.onKeyDown, this);
+    }
+
     start() {
+        // OBBUtils.test();
+        // log(OBBUtils.areNodesIntersecting(this.node1!, this.node2!));
         this.generateNewLevelNodes();
     }
 
@@ -25,14 +40,6 @@ export class Main extends Component {
                 this.switchAutoMoveOnUpdate();
             }
         }
-    }
-
-    onLoad() {
-        input.on(Input.EventType.KEY_DOWN, this.onKeyDown, this);
-    }
-
-    onDestroy() {
-        input.off(Input.EventType.KEY_DOWN, this.onKeyDown, this);
     }
 
     /**
@@ -59,11 +66,10 @@ export class Main extends Component {
             this.nodesRenderer.clear();
         }
 
-        const nodeSpritFrame = this.node1!.getComponent(Sprite)!.spriteFrame;
         const movementAreaSize = this.node.getComponent(UITransform)!.contentSize;
 
-        const nodesManager: NodesManager = NodesFactory.generate(movementAreaSize, 5, 5);
-        const nodesRenderer: NodesRenderer = new NodesRenderer(this.node, nodesManager, nodeSpritFrame);
+        const nodesManager: NodesManager = this.nodesFactory.generate(this.templateNode, movementAreaSize, 5, 5);
+        const nodesRenderer: NodesRenderer = new NodesRenderer(this.node, nodesManager);
         nodesRenderer.render();
 
         this.nodesRenderer = nodesRenderer;

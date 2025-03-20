@@ -1,4 +1,4 @@
-import { Label, log, randomRangeInt, Size, UITransform, Vec3, Node, math } from "cc";
+import { Label, log, Size, UITransform, Vec3, Node, instantiate, Sprite, math } from "cc";
 import { NodesManager } from "./NodesManager";
 import { NodeScript } from "./NodeScript";
 import { OBBUtils } from "./OBBUtils";
@@ -10,64 +10,54 @@ export class NodesFactory {
     /**
      * 生成节点集合
      */
-    static generate(movementAreaSize: Size, rows: number, cols: number): NodesManager {
+    generate(templateNode: Node, movementAreaSize: Size, rows: number, cols: number): NodesManager {
         const nodes: Node[] = [];
-        const baseNodeSize = new Size(60, 60);
-        const spacing = 30;
-        const counterClockwiseRotationDegree = 0;
+
+        // 节点间距（1、旋转角度时一定要增加此值，2、若出现死障节点，可尝试增大此值），经测试：
+        // 1、不旋转时，spacing最小可以为0，节点大小可以任意，长宽比任意。
+        // 2、旋转45度，节点大小33*33时，spacing最小要为14，否则就会出现死障节点。
+        // 3、旋转45度，节点大小60*60时，spacing最小要为25，否则就会出现死障节点。
+        const spacing = 25;
+        const baseNodeSize = new Size(60, 60);     // 节点大小尺寸
+        const counterClockwiseRotationDegree = 45; // 节点逆时针旋转角度
 
         const startX = -((cols - 1) * (baseNodeSize.width + spacing)) / 2;
         const startY = ((rows - 1) * (baseNodeSize.height + spacing)) / 2;
 
         for (let i = 0; i < rows; i++) {
             for (let j = 0; j < cols; j++) {
-                let node: Node;
-                let nodeScript: NodeScript;
-                let uiTransform: UITransform;
-                let position: Vec3;
                 let isIntersecting: boolean;
+                let node: Node = instantiate(templateNode);
+                node.active = true;
 
-                let cnt = 0;
-                do {
-                    cnt++;
-                    if (cnt > 1000) { // 避免死循环（尝试多次依然被其他节点障碍）
-                        break;
-                    }
+                // let cnt = 0;
+                // do {
+                //     cnt++;
+                //     if (cnt > 1000) { // 避免死循环
+                //         break;
+                //     }
 
-                    node = new Node(`Node${i * cols + j + 1}`);
-                    nodeScript = node.addComponent(NodeScript);
-                    nodeScript.direction = nodeScript.randomDirection; // 随机生成节点方向
-                    nodeScript.counterClockwiseRotationDegree = counterClockwiseRotationDegree; // 逆时针旋转角度
+                const no = i * cols + j + 1;
+                node.name = `Node${no}`;
 
-                    uiTransform = node.addComponent(UITransform);
-                    const randomWidth = baseNodeSize.width;// + randomRangeInt(-10, 10);
-                    const randomHeight = baseNodeSize.height;// + randomRangeInt(-10, 10);
-                    uiTransform.setContentSize(new Size(randomWidth, randomHeight));
+                // 设置节点脚本+精灵帧
+                this.setNodeScriptAndSprite(node, counterClockwiseRotationDegree);
 
-                    const labelNode = new Node(`Label${i * cols + j + 1}`);
-                    const label = labelNode.addComponent(Label);
-                    label.fontSize = 20;
+                // 设置节点尺寸+文本
+                this.setNodeUITransformAndLabelNode(node, baseNodeSize);
 
-                    node.addChild(labelNode);
+                // 设置节点位置
+                this.setNodePosition(node, baseNodeSize, counterClockwiseRotationDegree, spacing, startX, startY, i, j);
 
-                    const randomOffsetX = randomRangeInt(-5, 5);
-                    const randomOffsetY = randomRangeInt(-5, 5);
-                    position = new Vec3(
-                        startX + j * (baseNodeSize.width + spacing) + randomOffsetX,
-                        startY - i * (baseNodeSize.height + spacing) + randomOffsetY,
-                        0
-                    );
-
-                    node.setPosition(position);
-                    isIntersecting = nodes.some(existingNode => OBBUtils.areNodesIntersecting(node, existingNode));
-                } while (isIntersecting);
+                //     isIntersecting = nodes.some(existingNode => OBBUtils.areNodesIntersecting(node, existingNode));
+                // } while (isIntersecting);
 
                 nodes.push(node);
             }
         }
 
         // 边缘节点对齐摆放
-        // NodesFactory.alignEdgeNodes(nodes, baseNodeSize, cols, rows, spacing, startX, startY);
+        // this.alignEdgeNodes(nodes, baseNodeSize, cols, rows, spacing, startX, startY);
 
         const nodesManager = new NodesManager(nodes, movementAreaSize);
 
@@ -81,7 +71,43 @@ export class NodesFactory {
         return nodesManager;
     }
 
-    private static alignEdgeNodes(nodes: Node[], baseNodeSize: Size, cols: number, rows: number, spacing: number, startX: number, startY: number) {
+    private setNodeScriptAndSprite(node: Node, counterClockwiseRotationDegree: number) {
+        const nodeScript = node.addComponent(NodeScript);
+        nodeScript.direction = nodeScript.randomDirection;                          // 随机生成节点方向
+        nodeScript.counterClockwiseRotationDegree = counterClockwiseRotationDegree; // 逆时针旋转角度
+
+        const nodeSprite = node.getComponent(Sprite);
+        math.Color.fromHEX(nodeSprite.color, nodeScript.directionColor);
+    }
+
+    private setNodeUITransformAndLabelNode(node: Node, baseNodeSize: Size) {
+        const randomWidth = baseNodeSize.width; // + randomRangeInt(-10, 10);
+        const randomHeight = baseNodeSize.height; // + randomRangeInt(-10, 10);
+        (node.getComponent(UITransform)).setContentSize(new Size(randomWidth, randomHeight));
+
+        const label = node.children[0].getComponent(Label);
+        label.fontSize = 20;
+        label.getComponent(UITransform).setContentSize(new Size(randomWidth, randomHeight));
+    }
+
+    private setNodePosition(node: Node, baseNodeSize: Size, counterClockwiseRotationDegree: number, spacing: number, startX: number, startY: number, i: number, j: number) {
+        // 当节点不旋转且间距为0时，可以紧凑排列保证不相交；但节点旋转后，若不适当增加间距，则会有重叠，故此处自动增加一定间距保证不会因节点旋转而相交。
+        // const radian = math.toRadian(counterClockwiseRotationDegree);
+        // const adjustedWidth = baseNodeSize.width * Math.cos(radian) + baseNodeSize.height * Math.sin(radian);
+        // const adjustedHeight = baseNodeSize.height * Math.cos(radian) + baseNodeSize.width * Math.sin(radian);
+
+        const randomOffsetX = 0; //randomRangeInt(-5, 5);
+        const randomOffsetY = 0; //randomRangeInt(-5, 5);
+
+        const position = new Vec3(
+            startX + j * (baseNodeSize.width + spacing) + randomOffsetX,
+            startY - i * (baseNodeSize.height + spacing) + randomOffsetY,
+            0
+        );
+        node.setPosition(position);
+    }
+
+    private alignEdgeNodes(nodes: Node[], baseNodeSize: Size, cols: number, rows: number, spacing: number, startX: number, startY: number) {
         // 上边对齐：生成所有节点后，再将首行所有节靠顶边对齐
         const topNodes = nodes.filter((node, index) => index < cols);
         topNodes.forEach((node) => {

@@ -9,7 +9,7 @@ export class NodesManager {
     originalNodes: Node[];          // 原始节点集合
     tmpNodes: Node[];               // 临时节点集合
     unObstructedNodes: Node[] = []; // 无障碍节点集合
-    movementAreaSize: Size;         // 节点移动区域大小
+    movementAreaSize: Size;           // 节点移动区域大小
 
     constructor(nodes: Node[], movementAreaSize: Size) {
         this.originalNodes = nodes;
@@ -94,18 +94,22 @@ export class NodesManager {
             ) {
                 log(`节点${node.name}是无障碍节点 at position: ${currentPos}`);
                 node.setPosition(originalPos); // 恢复原位置
-                // node.updateWorldTransform(); // 强制更新节点的变换矩阵（强制刷新节点新位置）
+                // node.node.updateWorldTransform(); // 强制更新节点的变换矩阵（强制刷新节点新位置）
                 return true;
             }
 
             node.setPosition(currentPos);
-            // node.updateWorldTransform(); // 强制更新节点的变换矩阵（强制刷新节点新位置）
+            // node.node.updateWorldTransform(); // 强制更新节点的变换矩阵（强制刷新节点新位置）
 
             for (const otherNode of this.tmpNodes) {
-                if (otherNode !== node && OBBUtils.areNodesIntersecting(node, otherNode)) {
-                    log(`节点${node.name}被阻挡 at position: ${currentPos}, otherNode: ${otherNode.name}|${otherNode.getPosition()}`);
+                if (node === otherNode) {
+                    continue;
+                }
+                if (OBBUtils.areNodesIntersecting(node, otherNode)) {
+                    log(`节点${node.name}被阻挡 at position: ${currentPos} | ${nodeScript.directionVector},`
+                        + `otherNode: ${otherNode.name} | ${otherNode.getPosition()} | ${otherNode.getComponent(NodeScript)!.directionVector}`);
                     node.setPosition(originalPos); // 恢复原位置
-                    // node.updateWorldTransform(); // 强制更新节点的变换矩阵（强制刷新节点新位置）
+                    // node.node.updateWorldTransform(); // 强制更新节点的变换矩阵（强制刷新节点新位置）
                     return false;
                 }
             }

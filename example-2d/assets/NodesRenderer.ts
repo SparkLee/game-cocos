@@ -1,4 +1,4 @@
-import { Label, Node, Sprite, SpriteFrame, UITransform, Vec3, math } from "cc";
+import { Label, Node, UITransform, Vec3, log } from "cc";
 import { NodesManager } from "./NodesManager";
 import { NodeScript } from "./NodeScript";
 
@@ -8,13 +8,11 @@ import { NodeScript } from "./NodeScript";
 export class NodesRenderer {
     private targetNode: Node; // 将待渲染的节点集合挂载到此节点下
     private nodesManager: NodesManager;
-    private nodeSpritFrame: SpriteFrame;
     private currentMovingNode: Node | null = null; // 当前正在移动的节点
 
-    constructor(targetNode: Node, nodesManager: NodesManager, nodeSpritFrame: SpriteFrame) {
+    constructor(targetNode: Node, nodesManager: NodesManager) {
         this.targetNode = targetNode;
         this.nodesManager = nodesManager;
-        this.nodeSpritFrame = nodeSpritFrame;
     }
 
     /**
@@ -22,19 +20,16 @@ export class NodesRenderer {
      */
     render() {
         let index = 0;
-        this.nodesManager.unObstructedNodes.forEach(node => {
+        // const nodesToRender = this.nodesManager.originalNodes; // 渲染原始节点集合
+        const nodesToRender = this.nodesManager.unObstructedNodes; // 渲染修正了方向后的无障碍节点集合
+        nodesToRender.forEach(node => {
+            log(`setNodeUITransform: ${node.getComponent(UITransform).width} ${node.getComponent(UITransform).height}`);
+
             index++;
             const nodeScript = node.getComponent(NodeScript)!;
 
-            // 设置节点精灵帧/展示颜色
-            const sprite = node.addComponent(Sprite);
-            math.Color.fromHEX(sprite.color, nodeScript.directionColor);
-            sprite.spriteFrame = this.nodeSpritFrame;
-
-            // 设置节点展示文本
-            const labelNode = node.children[0];
-            const label = labelNode.getComponent(Label)!;
-            label.string = `${index} ${nodeScript.directionSign}`;
+            // 重新设置节点展示文本
+            (node.children[0].getComponent(Label)!).string = `${index} ${nodeScript.directionSign}`;
 
             this.targetNode.addChild(node);
         });
@@ -72,7 +67,7 @@ export class NodesRenderer {
 
         const currentNodeScript = this.currentMovingNode.getComponent(NodeScript)!;
         const direction: Vec3 = currentNodeScript.directionVector;
-        const speed = 50;
+        const speed = 100;
         const speedyDirection = direction.clone().multiplyScalar(speed);
 
         const position = this.currentMovingNode.getPosition();
