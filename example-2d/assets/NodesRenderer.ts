@@ -30,6 +30,7 @@ export class NodesRenderer {
             const nodeScript = node.getComponent(NodeScript)!;
 
             // 重新设置节点展示文本
+            node.name = `NodeRender${index}`;
             (node.children[0].getComponent(Label)!).string = `${index} ${nodeScript.directionSign}`;
 
             this.targetNode.addChild(node);
@@ -76,13 +77,13 @@ export class NodesRenderer {
 
         const currentNodeScript = this.currentMovingNode.getComponent(NodeScript)!;
         const direction: Vec3 = currentNodeScript.directionVector;
-        const speed = 100;
+        const speed = 10;
         const speedyDirection = direction.clone().multiplyScalar(speed);
         const position = this.currentMovingNode.getPosition();
         this.currentMovingNode.setPosition(position.add(speedyDirection));
         for (const node of unObstructedNodes) {
             if (node !== this.currentMovingNode && OBBUtils.areNodesIntersecting(this.currentMovingNode, node)) {
-                log(`moveOneNodeOneStep: 节点 ${this.currentMovingNode.name} 与节点 ${node.name} 相交`);
+                log(`moveOneNodeOneStep: 当前移动节点 ${this.currentMovingNode.name} 与其他节点 ${node.name} 相交`);
                 return true; // 有碰撞就停下来
             }
         };
