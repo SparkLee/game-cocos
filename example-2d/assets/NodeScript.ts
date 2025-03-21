@@ -2,7 +2,7 @@ import { _decorator, Component, log, math, Sprite, Vec3 } from 'cc';
 const { ccclass, property } = _decorator;
 
 // 节点方向枚举
-enum NodeDirection {
+export enum NodeDirection {
     Up,    // 上
     Down,  // 下
     Left,  // 左
@@ -53,8 +53,14 @@ export class NodeScript extends Component {
         this.node.setRotationFromEuler(0, 0, this.counterClockwiseRotationDegree); // 旋转归属节点角度
     }
 
-    get randomDirection(): number { // 获取随机方向
+    static get randomDirection(): number { // 获取随机方向
         return math.randomRangeInt(NodeDirection.Up, NodeDirection.Right + 1);
+    }
+    static get randomDirectionUpDown(): number { // 获取上下两个方向中的一个随机方向
+        return math.randomRangeInt(NodeDirection.Up, NodeDirection.Down + 1);
+    }
+    static get randomDirectionLeftRight(): number { // 获取左右两个方向中的一个随机方向
+        return math.randomRangeInt(NodeDirection.Left, NodeDirection.Right + 1);
     }
     get directionColor(): string { // 获取节点方向颜色
         return NodeDirectionColor[NodeDirection[this.direction]];
