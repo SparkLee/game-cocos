@@ -1,6 +1,7 @@
 import { Label, Node, UITransform, Vec3, log } from "cc";
 import { NodesManager } from "./NodesManager";
 import { NodeScript } from "./NodeScript";
+import { OBBUtils } from "./OBBUtils";
 
 /**
  * 节点集合渲染器（将生成的节点集合渲染到屏幕上）
@@ -39,8 +40,16 @@ export class NodesRenderer {
      * 清除所有已渲染节点，方便重新生成并渲染
      */
     clear() {
+        // 清除所有已渲染节点
         this.nodesManager.unObstructedNodes.forEach(node => {
             node.destroy();
+        });
+
+        // 清除所有名称为"Node"开头的子节点
+        this.targetNode.children.forEach(child => {
+            if (child.name.startsWith('Node')) {
+                child.destroy();
+            }
         });
     }
 
@@ -69,9 +78,15 @@ export class NodesRenderer {
         const direction: Vec3 = currentNodeScript.directionVector;
         const speed = 100;
         const speedyDirection = direction.clone().multiplyScalar(speed);
-
         const position = this.currentMovingNode.getPosition();
         this.currentMovingNode.setPosition(position.add(speedyDirection));
+        for (const node of unObstructedNodes) {
+            if (node !== this.currentMovingNode && OBBUtils.areNodesIntersecting(this.currentMovingNode, node)) {
+                log(`moveOneNodeOneStep: 节点 ${this.currentMovingNode.name} 与节点 ${node.name} 相交`);
+                return true; // 有碰撞就停下来
+            }
+        };
+
         const sceneSize = this.nodesManager.movementAreaSize;
         const currentPos = this.currentMovingNode.getPosition();
         if (

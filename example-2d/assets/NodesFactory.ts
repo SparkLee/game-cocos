@@ -142,7 +142,7 @@ export class NodesFactory {
         // 3、旋转45度，节点大小60*60时，spacing最小要为25，否则就会出现死障节点。
         const spacing = 0;
         const baseNodeSize = new Size(145, 145);     // 节点大小尺寸
-        const counterClockwiseRotationDegree = 0; // 节点逆时针旋转角度
+        const counterClockwiseRotationDegree = 45; // 节点逆时针旋转角度
 
         const startX = -((cols - 1) * (baseNodeSize.width + spacing)) / 2;
         const startY = ((rows - 1) * (baseNodeSize.height + spacing)) / 2;
