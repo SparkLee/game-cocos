@@ -130,6 +130,6 @@
     "hasAlpha": false,
     "fixAlphaTransparencyArtifacts": false,
     "redirect": "fec96510-5e2b-429b-8418-35e52d077a2e@6c48a",
-    "flipVertical": false
+    "flipVertical": true
   }
 }
