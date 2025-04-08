@@ -2,8 +2,8 @@
 // Entity: 由 w*h 个格子组成的矩形实体（w列，h行；1*1：占用1个格子【小型车】，1*2：占用2个格子【中型车】，2*3：占用6个格子【大型车】）。
 // 要将多个Entity实体尽量紧凑地排列，尽量铺满整个Grid网络。
 
-export const GRID_WIDTH = 20; // 网格宽度（格子数）
-export const GRID_HEIGHT = 15;// 网格高度（格式数）
+export const GRID_WIDTH = 10; // 网格宽度（格子数）
+export const GRID_HEIGHT = 10;// 网格高度（格式数）
 
 /**
  * 实体类型（比如：小型车、中型车、大型车等）
@@ -20,7 +20,7 @@ interface EntityType {
 const ENTITY_TYPES: EntityType[] = [
     { id: '大x', width: 3, height: 2, color: '#FF6B6B', axisDirection: 'x', count: 3 },
     { id: '大y', width: 2, height: 3, color: '#FF6B6B', axisDirection: 'y', count: 3 },
-    { id: '中xy', width: 2, height: 2, color: '#4ECDC4', axisDirection: 'xy', count: 8 },
+    { id: '中xy', width: 2, height: 2, color: '#4ECDC4', axisDirection: 'xy', count: 4 },
     { id: '小x', width: 2, height: 1, color: '#45B7D1', axisDirection: 'x', count: 3 },
     { id: '小y', width: 1, height: 2, color: '#45B7D1', axisDirection: 'y', count: 3 },
 ];

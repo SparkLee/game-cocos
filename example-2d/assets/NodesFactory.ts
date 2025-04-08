@@ -2,6 +2,7 @@ import { Label, log, Size, UITransform, Vec3, Node, instantiate, Sprite, math, r
 import { NodesManager } from "./NodesManager";
 import { NodeDirection, NodeScript } from "./NodeScript";
 import { OBBUtils } from "./OBBUtils";
+import { Entity, generateCompactArrangedGridEntities, GRID_HEIGHT, GRID_WIDTH } from "./Grid/Grid";
 
 /**
  * 生成节点集合的工厂类
@@ -37,7 +38,7 @@ export class NodesFactory {
                 do {
                     cnt++;
                     if (cnt > 1000) { // 避免死循环
-                        log(`fixObstructedNodesDirection [${cnt}] 中断死循环`);
+                        log(`generate [${cnt}] 中断死循环`);
                         break;
                     }
 
@@ -160,7 +161,7 @@ export class NodesFactory {
                 do {
                     cnt++;
                     if (cnt > 1000) { // 避免死循环
-                        log(`fixObstructedNodesDirection [${cnt}] 中断死循环`);
+                        log(`generateV2 [${cnt}] 中断死循环`);
                         break;
                     }
 
@@ -205,6 +206,78 @@ export class NodesFactory {
         log(`全部死障节点集合 Nodes:`, allObscuredNodes.map(node => node.name));
 
         return nodesManager;
+    }
+
+    generateV3(templateNode: Node, movementAreaSize: Size, rows: number, cols: number): NodesManager {
+        const nodes: Node[] = [];
+        const counterClockwiseRotationDegree = 0; // 节点逆时针旋转角度
+        const cellSize = 40; // 每个格子的像素大小
+        const entityGap = 5; // 实体之间的间距像素
+
+        const entities = generateCompactArrangedGridEntities();
+        for (let i = 0; i < entities.length; i++) {
+            let node: Node = instantiate(templateNode);
+            node.active = true;
+
+            let isIntersecting: boolean;
+            let cnt = 0;
+            do {
+                cnt++;
+                if (cnt > 5000) { // 避免死循环
+                    log(`generateV3 [${cnt}] 中断死循环`);
+                    break;
+                }
+                const entity = entities[i];
+
+
+                // 随机生成节点尺寸和方向
+                const axisDirectionMap = new Map<string, () => NodeDirection>([
+                    ['x', () => NodeScript.randomDirectionLeftRight], // 左右方向
+                    ['y', () => NodeScript.randomDirectionUpDown],    // 上下方向
+                    ['xy', () => NodeScript.randomDirection],         // 上下左右方向
+                ]);
+                const randomDirection = axisDirectionMap.get(entity.axisDirection)!();
+
+                // 设置节点方向
+                this.setNodeDirection(node, randomDirection, counterClockwiseRotationDegree);
+
+                // 设置节点尺寸
+                this.setNodeSize(node, new Size(entity.width * cellSize - entityGap, entity.height * cellSize - entityGap));
+
+                // 设置节点位置
+                this.setNodePositionByEntity(node, entity, cellSize, GRID_WIDTH, GRID_HEIGHT);
+
+                isIntersecting = nodes.some(existingNode => OBBUtils.areNodesIntersecting(node, existingNode));
+            } while (isIntersecting);
+
+            nodes.push(node);
+        }
+
+        const nodesManager = new NodesManager(nodes, movementAreaSize);
+
+        const allUnobstructedNodes = nodesManager.fixObstructedNodesDirection();
+        log(`nodes Nodes:`, nodes.map(node => node.name));
+        log(`全部无障碍节点集合 Nodes:`, allUnobstructedNodes.map(node => node.name));
+
+        const allObscuredNodes = nodes.filter(node => !allUnobstructedNodes.includes(node));
+        log(`全部死障节点集合 Nodes:`, allObscuredNodes.map(node => node.name));
+
+        return nodesManager;
+    }
+
+    /**
+     * 综合考虑entity的x,y,width,height属性，设置每个entity的座标，最终使得所有entity组成的矩形显示在屏幕中间。
+     */
+    private setNodePositionByEntity(node: Node, entity: Entity, cellSize: number, gridWidth: number, gridHeight: number) {
+        const x = (entity.x * cellSize)     // entity的x属性是相对于Grid的，所以要乘以GRID_SIZE
+            + (entity.width * cellSize / 2) // 节点宽度的一半
+            - gridWidth * cellSize / 2;     // 节点集合矩形宽度的一半（矩形显示在屏幕中间，不用管屏幕尺寸，我只管节点集合矩形在屏幕中间即可，此处不管它是否溢出屏幕）
+
+        const y = (entity.y * cellSize)
+            + (entity.height * cellSize / 2)
+            - gridHeight * cellSize / 2;
+
+        node.setPosition(x, y, 0);
     }
 
     private alignEdgeNodes(nodes: Node[], baseNodeSize: Size, cols: number, rows: number, spacing: number, startX: number, startY: number) {

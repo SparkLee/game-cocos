@@ -21,8 +21,8 @@ export class NodesRenderer {
      */
     render() {
         let index = 0;
-        // const nodesToRender = this.nodesManager.originalNodes; // 渲染原始节点集合
-        const nodesToRender = this.nodesManager.unObstructedNodes; // 渲染修正了方向后的无障碍节点集合
+        const nodesToRender = this.nodesManager.originalNodes; // 渲染原始节点集合
+        // const nodesToRender = this.nodesManager.unObstructedNodes; // 渲染修正了方向后的无障碍节点集合
         nodesToRender.forEach(node => {
             log(`setNodeUITransform: ${node.getComponent(UITransform).width} ${node.getComponent(UITransform).height}`);
 

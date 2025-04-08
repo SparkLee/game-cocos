@@ -68,7 +68,7 @@ export class Main extends Component {
 
         const movementAreaSize = this.node.getComponent(UITransform)!.contentSize;
 
-        const nodesManager: NodesManager = this.nodesFactory.generateV2(this.templateNode, movementAreaSize, 5, 5);
+        const nodesManager: NodesManager = this.nodesFactory.generateV3(this.templateNode, movementAreaSize, 5, 5);
         const nodesRenderer: NodesRenderer = new NodesRenderer(this.node, nodesManager);
         nodesRenderer.render();
 
