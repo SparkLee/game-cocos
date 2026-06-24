@@ -18,6 +18,8 @@ export class sprite extends Component {
             const sprite = this.node.getComponent(Sprite);
             sprite.spriteFrame = sf;
 
+            log(tex.mipmapLevel);
+            log(tex.mipmaps)
             // log(imageAsset);
             // log(imageAsset.nativeUrl)
         });
