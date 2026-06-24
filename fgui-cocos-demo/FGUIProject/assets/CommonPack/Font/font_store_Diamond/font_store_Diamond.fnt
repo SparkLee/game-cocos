@@ -1,0 +1,15 @@
+info size=30 resizable=true colored=true
+char id=48 img=mxcxsx xoffset=0 yoffset=0 xadvance=0
+char id=49 img=mxcxsy xoffset=0 yoffset=0 xadvance=0
+char id=50 img=mxcxsz xoffset=0 yoffset=0 xadvance=0
+char id=51 img=mxcxt0 xoffset=0 yoffset=0 xadvance=0
+char id=52 img=mxcxt1 xoffset=0 yoffset=0 xadvance=0
+char id=53 img=mxcxt2 xoffset=0 yoffset=0 xadvance=0
+char id=54 img=mxcxt3 xoffset=0 yoffset=0 xadvance=0
+char id=55 img=mxcxt4 xoffset=0 yoffset=0 xadvance=0
+char id=56 img=mxcxt5 xoffset=0 yoffset=0 xadvance=0
+char id=57 img=mxcxst xoffset=0 yoffset=0 xadvance=0
+char id=43 img=mxcxsu xoffset=0 yoffset=0 xadvance=0
+char id=120 img=mxcxsv xoffset=0 yoffset=6 xadvance=0
+char id=165 img=mxcxsw xoffset=0 yoffset=0 xadvance=0
+char id=65509 img=mxcxsw xoffset=0 yoffset=0 xadvance=0

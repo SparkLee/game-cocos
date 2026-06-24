@@ -1,0 +1,21 @@
+{
+  "name": "CocosProject",
+  "uuid": "b3f8ef16-3f5f-4286-9dd3-048a70a4542b",
+  "creator": {
+    "version": "3.8.6"
+  },
+  "dependencies": {
+    "crypto-js": "^4.2.0",
+    "fairygui-cc": "^1.2.2",
+    "protobufjs": "^7.5.4"
+  },
+  "scripts": {
+    "build-proto:pbjs": "pbjs --dependency protobufjs/minimal.js --target static-module --wrap commonjs --out ./assets/Logic/Proto.js/proto.js E:/SVN2025/YXWD2D_New/protos/*.proto",
+    "build-proto:pbts": "pbts --main --out ./assets/Logic/Proto.js/proto.d.ts ./assets/Logic/Proto.js/*.js  && node ./assets/Logic/Proto.js/wrap-pbts-result.js"
+  },
+  "devDependencies": {
+    "protobufjs-cli": "^1.3.3",
+    "xlsx": "^0.18.5"
+  }
+}
+

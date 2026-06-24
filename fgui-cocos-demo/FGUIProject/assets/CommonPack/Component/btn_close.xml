@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="87,87" extention="Button">
+  <controller name="button" pages="0,up,1,down,2,over,3,selectedOver" selected="0"/>
+  <displayList>
+    <image id="n0_rmk0" name="n0" src="rmk01" fileName="Image/kind_1.png" xy="0,0">
+      <gearDisplay controller="button" pages="0"/>
+      <relation target="" sidePair="width-width,height-height"/>
+    </image>
+    <image id="n1_rmk0" name="n1" src="rmk02" fileName="Image/kind_2.png" xy="0,0">
+      <gearDisplay controller="button" pages="1"/>
+      <relation target="" sidePair="width-width,height-height"/>
+    </image>
+    <image id="n2_rmk0" name="n2" src="rmk09" fileName="Image/ui_pvp_icon_rankLv7.png" xy="-47,-47">
+      <gearDisplay controller="button" pages="2"/>
+      <relation target="" sidePair="width-width,height-height"/>
+    </image>
+    <image id="n3_rmk0" name="n3" src="rmk07" fileName="Image/ui_common_lattice7.png" xy="-47,-47">
+      <gearDisplay controller="button" pages="3"/>
+      <relation target="" sidePair="width-width,height-height"/>
+    </image>
+  </displayList>
+  <Button sound="ui://e8nqiqqmrmk0b"/>
+</component>

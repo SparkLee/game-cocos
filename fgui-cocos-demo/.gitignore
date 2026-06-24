@@ -1,0 +1,2 @@
+# 根目录无 package.json，忽略误生成的 lock 文件
+package-lock.json

@@ -1,0 +1,10 @@
+efx_fwq_loading.png
+size:30,35
+filter:Linear,Linear
+pma:true
+qq1
+bounds:2,2,12,31
+offsets:4,5,20,40
+qq2
+bounds:16,2,12,31
+offsets:4,5,20,40
