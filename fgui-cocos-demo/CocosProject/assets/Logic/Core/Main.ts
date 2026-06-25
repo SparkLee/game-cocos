@@ -1,5 +1,4 @@
-import { _decorator, Component, log, game, Game } from 'cc';
-import * as fgui from "fairygui-cc";
+import { _decorator, Component, log, game, Game, assetManager } from 'cc';
 import CommonPackBinder from '../FGUIScript/CommonPack/CommonPackBinder';
 import FGUIConfig from '../UILogic/FGUIConfig';
 import FGUIManager from '../UILogic/FGUIManager';
@@ -12,14 +11,18 @@ export class Main extends Component {
 
     start() {
         FGUIConfig.Init();
-        fgui.UIPackage.loadPackage("FGUIRes/CommonPack", (err) => {
+        assetManager.loadBundle('FGUIRes', (err, bundle) => {
             if (err) {
-                log("CommonPack 加载失败：" + err);
+                log('FGUIRes bundle 加载失败：' + err);
                 return;
             }
-            CommonPackBinder.bindAll();
-            FGUIManager.Instance.Init();
-            FGUIManager.Instance.ShowPage("CommonPack/Common_Info");
+            FGUIManager.loadFguiPackageFromBundle('CommonPack', bundle)
+                .then(() => {
+                    CommonPackBinder.bindAll();
+                    FGUIManager.Instance.Init();
+                    FGUIManager.Instance.ShowPage('CommonPack/Common_Info');
+                })
+                .catch((e) => log('CommonPack 加载失败：' + e));
         });
 
         //@ts-ignore

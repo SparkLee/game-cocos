@@ -41,7 +41,7 @@ FairyGUI **不会把整个资源库原样发布**。只有标记为 **导出** �
 
 **FGUI 编辑器界面 →「全部发布」**（唯一已验证可用的完整发布方式）
 
-- 资源输出到 `CocosProject/assets/FGUIRes/`
+- 资源输出到 `CocosProject/assets/FGUIRes/`（配置为 Asset Bundle）
 - 绑定代码输出到 `CocosProject/assets/Logic/FGUIScript/`
 - 走 `plugins/cocosPublish/GenCode_TS.ts`，能生成完整子组件类，例如：
   - `UI_Common_Info.ts`
@@ -105,9 +105,12 @@ npx --yes @openfairygui/cli publish ../FGUIProject --output ./assets/FGUIRes --p
 ## 本仓库约定
 
 - FGUI 工程：`FGUIProject/`
-- 资源发布：`CocosProject/assets/FGUIRes/`
+- 资源发布：`CocosProject/assets/FGUIRes/`（须配置为 Asset Bundle，bundle 名 `FGUIRes`）
 - 代码生成：`CocosProject/assets/Logic/FGUIScript/`（自动生成，勿手改）
 - 业务逻辑：`CocosProject/assets/Logic/UILogic/`（手写）
+- 运行时加载（与自走棋一致）：
+  1. `assetManager.loadBundle('FGUIRes')`
+  2. `FGUIManager.loadFguiPackageFromBundle('CommonPack', bundle)`（路径为包名，非 `FGUIRes/CommonPack`）
 
 ## 正常发布后的目录示例（编辑器「全部发布」）
 

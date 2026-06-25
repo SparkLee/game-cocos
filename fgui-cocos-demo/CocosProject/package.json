@@ -2,7 +2,7 @@
   "name": "CocosProject",
   "uuid": "b3f8ef16-3f5f-4286-9dd3-048a70a4542b",
   "creator": {
-    "version": "3.8.6"
+    "version": "3.8.8"
   },
   "dependencies": {
     "crypto-js": "^4.2.0",
@@ -19,4 +19,3 @@
     "xlsx": "^0.18.5"
   }
 }
-
