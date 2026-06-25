@@ -5,9 +5,9 @@
     <image id="rmk02" name="kind_2.png" path="/Image/"/>
     <image id="rmk03" name="ui_common_bg_black3.png" path="/Image/"/>
     <image id="rmk04" name="ui_common_bg_topTitle.png" path="/Image/"/>
-    <image id="rmk05" name="ui_common_bg_windowTitleWin.png" path="/Image/"/>
-    <image id="rmk06" name="ui_common_choose_lv4.png" path="/Image/"/>
-    <image id="rmk07" name="ui_common_lattice7.png" path="/Image/"/>
+    <image id="rmk05" name="ui_common_bg_windowTitleWin.png" path="/Image/" exported="true"/>
+    <image id="rmk06" name="ui_common_choose_lv4.png" path="/Image/" exported="true"/>
+    <image id="rmk07" name="ui_common_lattice7.png" path="/Image/" exported="true"/>
     <image id="rmk08" name="ui_Hero_icon_equip0.png" path="/Image/"/>
     <image id="rmk09" name="ui_pvp_icon_rankLv7.png" path="/Image/"/>
     <image id="rmk0a" name="ui_role_gongji.png" path="/Image/"/>
@@ -808,7 +808,7 @@
     <spine id="rmk0md" name="efx_common_disconnected.skel" path="/Spine/efx_common_disconnected/" width="287" height="234" require="rmk07w,rmk07x" atlasNames="efx_common_disconnected" anchor="143,117"/>
     <spine id="rmk0me" name="efx_fwq_loading.skel" path="/Spine/efx_fwq_loading/" width="120" height="120" require="rmk07y,rmk07z" atlasNames="efx_fwq_loading" anchor="60,60"/>
     <spine id="rmk0mf" name="efx_game_winRole.skel" path="/Spine/efx_game_winRole/" width="216" height="216" require="rmk080,rmk061" atlasNames="efx_game_winRole" anchor="108,108"/>
-    <component id="rmk0mg" name="Common_Info.xml" path="/Page/"/>
+    <component id="rmk0mg" name="Common_Info.xml" path="/Page/" exported="true"/>
     <component id="rmk0mh" name="box_info.xml" path="/Component/"/>
     <component id="rmk0mj" name="btn_close.xml" path="/Component/"/>
   </resources>

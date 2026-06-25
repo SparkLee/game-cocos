@@ -10,6 +10,7 @@
     "protobufjs": "^7.5.4"
   },
   "scripts": {
+    "publish-fgui": "npx --yes @openfairygui/cli publish ../FGUIProject --output ./assets/FGUIRes --project-type cocoscreator",
     "build-proto:pbjs": "pbjs --dependency protobufjs/minimal.js --target static-module --wrap commonjs --out ./assets/Logic/Proto.js/proto.js E:/SVN2025/YXWD2D_New/protos/*.proto",
     "build-proto:pbts": "pbts --main --out ./assets/Logic/Proto.js/proto.d.ts ./assets/Logic/Proto.js/*.js  && node ./assets/Logic/Proto.js/wrap-pbts-result.js"
   },

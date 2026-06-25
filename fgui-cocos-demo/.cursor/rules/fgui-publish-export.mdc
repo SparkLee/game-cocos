@@ -1,0 +1,125 @@
+---
+description: FairyGUI 发布排查——组件必须设为导出，依赖资源才会进包
+globs: FGUIProject/**/*
+alwaysApply: false
+---
+
+# FairyGUI 发布：导出（exported）机制
+
+## 核心结论
+
+FairyGUI **不会把整个资源库原样发布**。只有标记为 **导出** 的组件，以及它们 **依赖链上的组件和素材**，才会进入发布产物。
+
+- 编辑器操作：资源库中右键组件 → **设置为导出**
+- `package.xml` 表现：对应节点出现 `exported="true"`
+
+```xml
+<component id="rmk0mg" name="Common_Info.xml" path="/Page/" exported="true"/>
+<image id="rmk05" name="ui_common_bg_windowTitleWin.png" path="/Image/" exported="true"/>
+```
+
+## 排查发布产物异常时优先检查
+
+若 `FGUIRes` 里只有很小的 `.bin`（几十到几百字节）、没有 `*_atlas*.png` / `*.mp3`：
+
+1. **先查入口页面/组件是否已设为导出**（最常见原因）
+2. 再查是否误点「仅发布定义」
+3. 再查 `packageCount`、发布路径等配置
+
+**不要**在未确认 `exported` 之前，把问题归因于 `packageCount: 2`；自走棋等正常工程同样使用 2 包模式。
+
+## 依赖传播规则
+
+将页面组件（如 `Common_Info`）设为导出后，编辑器会递归标记其引用到的：
+
+- 子组件（列表 item、按钮等）
+- 图片、字体、音频、Spine 等素材
+
+未从任何「已导出组件」可达的资源，**不会**出现在 `FGUIRes`。
+
+## 推荐发布方式（当前可用）
+
+**FGUI 编辑器界面 →「全部发布」**（唯一已验证可用的完整发布方式）
+
+- 资源输出到 `CocosProject/assets/FGUIRes/`
+- 绑定代码输出到 `CocosProject/assets/Logic/FGUIScript/`
+- 走 `plugins/cocosPublish/GenCode_TS.ts`，能生成完整子组件类，例如：
+  - `UI_Common_Info.ts`
+  - `UI_box_info.ts`
+  - `UI_btn_close.ts`
+  - `CommonPackBinder.ts`（含 `setExtension`）
+
+发布前确认：
+- 入口组件已 **设置为导出**
+- 不要只点「仅发布定义」
+- `ignoreNoname` 若设为 `true`，且子节点全是 `n0`、`n1` 等默认名，会跳过组件类生成（当前工程为 `false`）
+
+业务逻辑手写代码放 `CocosProject/assets/Logic/UILogic/`，**不要**和 `FGUIScript` 混用。
+
+---
+
+## ⚠️ 命令行发布（已标记废弃 / 有问题，暂勿直接使用）
+
+> **状态：DEPRECATED / 已知问题** — 保留备查，后续有时间再优化。  
+> **当前结论：两种 CLI 均无法可靠生成子组件绑定代码**（如 `UI_box_info.ts`、`UI_btn_close.ts`），**不能替代编辑器「全部发布」**。
+
+### 已知问题摘要
+
+| 方式 | 状态 | 问题 |
+|------|------|------|
+| `npm run publish-fgui`（OpenFairyGUI CLI） | ⚠️ 有问题 | 不走 `cocosPublish` 插件；通常只生成顶层 `exported` 组件（如 `UI_CommonInfo.ts`），**不生成** `UI_box_info.ts` 等子组件类 |
+| FairyGUI 编辑器 CLI（`FairyGUI-Editor.exe -p ...`） | ⚠️ 有问题 | 实测同样**无法**完整导出子组件绑定代码，与界面「全部发布」行为不一致 |
+
+界面「全部发布」与 CLI 的差异：界面发布走 `cocosPublish` + `CollectClasses()`，会收集页面依赖的子组件；两条 CLI 链路目前均不能满足本仓库对 `FGUIScript` 的完整生成需求。
+
+### ~~方式一：npm 脚本（OpenFairyGUI CLI）~~ — 暂勿使用
+
+```bash
+# DEPRECATED - 代码生成不完整，见上文
+cd CocosProject
+npm run publish-fgui
+```
+
+```bash
+# DEPRECATED
+npx --yes @openfairygui/cli publish ../FGUIProject --output ./assets/FGUIRes --project-type cocoscreator
+```
+
+- `--output` 只管 `FGUIRes`；代码写入 `FGUIScript` 但**不完整**
+- 不能加载 `FGUIProject/plugins/cocosPublish`
+
+### ~~方式二：FairyGUI 官方编辑器 CLI~~ — 暂勿使用
+
+```bash
+# DEPRECATED - 子组件 UI_*.ts 生成不可靠，见上文
+"E:/software/fgui/FairyGUI-Editor_6.1.4/FairyGUI-Editor.exe" -p "D:/code/game/game.engine-cocos/fgui-cocos-demo/FGUIProject/FGUIProject.fairy" -b CommonPack,GamePack
+```
+
+### 后续优化方向（TODO）
+
+- [ ] 让 CLI 发布与 `cocosPublish/GenCode_TS.ts` 行为对齐（或 CLI 只发资源、`allowGenCode: false` + 可靠的代码生成方案）
+- [ ] 或修复编辑器 CLI，使其与界面「全部发布」一致
+
+---
+
+## 本仓库约定
+
+- FGUI 工程：`FGUIProject/`
+- 资源发布：`CocosProject/assets/FGUIRes/`
+- 代码生成：`CocosProject/assets/Logic/FGUIScript/`（自动生成，勿手改）
+- 业务逻辑：`CocosProject/assets/Logic/UILogic/`（手写）
+
+## 正常发布后的目录示例（编辑器「全部发布」）
+
+```
+FGUIRes/
+  CommonPack.bin
+  CommonPack_atlas0.png
+  CommonPack_rmk0b.mp3
+
+FGUIScript/CommonPack/
+  CommonPackBinder.ts
+  UI_Common_Info.ts
+  UI_box_info.ts
+  UI_btn_close.ts
+```

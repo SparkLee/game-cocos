@@ -13,7 +13,7 @@
     "classNamePrefix": "UI_",
     "memberNamePrefix": "m_",
     "packageName": null,
-    "ignoreNoname": true,
+    "ignoreNoname": false,
     "getMemberByName": false,
     "codeType": ""
   },
