@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="1080,1920">
+  <displayList>
+    <image id="n1_sfgu" name="n1" xy="0,0" src="jw6v0" fileName="图层 1.png"/>
+    <image id="n2_sfgu" name="n2" xy="627,291" src="jw6v1" fileName="身体.png"/>
+    <image id="n3_sfgu" name="n3" xy="510,216" src="jw6v2" fileName="板子.png"/>
+    <image id="n4_sfgu" name="n4" xy="777,326" src="jw6v3" fileName="手2.png"/>
+    <image id="n5_sfgu" name="n5" xy="718,312" src="jw6v4" fileName="手1.png"/>
+    <image id="n6_sfgu" name="n6" xy="647,193" src="jw6v5" fileName="后发1.png"/>
+    <image id="n7_sfgu" name="n7" xy="655,102" src="jw6v6" fileName="头.png"/>
+    <image id="n8_sfgu" name="n8" xy="622,99" src="jw6v7" fileName="前发1.png"/>
+    <image id="n9_sfgu" name="n9" xy="733,98" src="jw6v8" fileName="后发2.png"/>
+    <image id="n10_sfgu" name="n10" xy="803,229" src="jw6v9" fileName="耳朵.png"/>
+    <image id="n11_sfgu" name="n11" xy="734,120" src="jw6va" fileName="前发2.png"/>
+  </displayList>
+</component>

@@ -1,13 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <component size="800,596" bgColor="#ffff00">
   <displayList>
-    <image id="n1_rmk0" name="n1" src="rmk06" fileName="Image/ui_common_choose_lv4.png" xy="6,0" size="794,596"/>
+    <image id="n1_rmk0" name="n1" src="rmk06" fileName="Image/ui_common_choose_lv4.png" xy="6,0" size="794,596">
+      <relation target="" sidePair="width-width,height-height"/>
+    </image>
     <image id="n0_rmk0" name="n0" src="rmk05" fileName="Image/ui_common_bg_windowTitleWin.png" xy="83,32"/>
-    <text id="n2_rmk0" name="n2" xy="301,69" size="197,51" fontSize="38" color="#3300cc" bold="true" text="无敌风火轮"/>
+    <text id="n2_rmk0" name="n2" xy="301,69" size="196,52" fontSize="38" color="#3300cc" bold="true" text="无敌风火轮"/>
     <list id="n4_rmk0" name="n4" xy="218,221" size="364,240" layout="row" overflow="scroll" scroll="horizontal" defaultItem="ui://e8nqiqqmrmk0mh">
       <item/>
       <item/>
     </list>
     <component id="n5_rmk0" name="n5" src="rmk0mj" fileName="Component/btn_close.xml" xy="46,228"/>
+    <movieclip id="n6_euhe" name="n6" src="euhemk" fileName="Page/MovieClip1.jta" xy="57,346" size="130,188"/>
   </displayList>
+  <transition name="牛逼动效" options="1" autoPlayRepeat="15" autoPlayDelay="0.015" frameRate="60">
+    <item time="0" type="Alpha" target="n2_rmk0" tween="true" startValue="1" endValue="0.07" duration="9" ease="Elastic.Out" repeat="-1" yoyo="true"/>
+    <item time="9" type="Alpha" target="n2_rmk0" tween="true" startValue="0.07" endValue="1" duration="8"/>
+    <item time="9" type="XY" target="n2_rmk0" tween="true" startValue="463,69" endValue="297,72" duration="8"/>
+    <item time="17" type="XY" target="n2_rmk0" tween="true" startValue="297,72" endValue="147,70" duration="7"/>
+    <item time="24" type="Alpha" target="n2_rmk0" value="0.03"/>
+    <item time="24" type="XY" target="n2_rmk0" tween="true" startValue="147,70" endValue="304,72" duration="9"/>
+    <item time="33" type="Alpha" target="n2_rmk0" value="1"/>
+  </transition>
+  <transition name="t2"/>
+  <transition name="t3">
+    <item time="0" type="Alpha" target="n2_rmk0" value="1"/>
+    <item time="0" type="Rotation" target="n2_rmk0" value="0"/>
+    <item time="0" type="Scale" target="n2_rmk0" value="1,1"/>
+    <item time="0" type="Shake" target="n2_rmk0" value="3,0.5"/>
+    <item time="0" type="Size" target="n2_rmk0" value="196,52"/>
+    <item time="0" type="Sound" value=""/>
+    <item time="0" type="XY" target="n2_rmk0" value="301,69"/>
+  </transition>
 </component>

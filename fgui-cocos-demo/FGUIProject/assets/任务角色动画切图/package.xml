@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packageDescription id="hzmx4r3k">
+  <resources>
+    <image id="jw6v0" name="图层 1.png" path="/"/>
+    <image id="jw6v1" name="身体.png" path="/"/>
+    <image id="jw6v2" name="板子.png" path="/"/>
+    <image id="jw6v3" name="手2.png" path="/"/>
+    <image id="jw6v4" name="手1.png" path="/"/>
+    <image id="jw6v5" name="后发1.png" path="/"/>
+    <image id="jw6v6" name="头.png" path="/"/>
+    <image id="jw6v7" name="前发1.png" path="/"/>
+    <image id="jw6v8" name="后发2.png" path="/"/>
+    <image id="jw6v9" name="耳朵.png" path="/"/>
+    <image id="jw6va" name="前发2.png" path="/"/>
+    <component id="jw6vb" name="任务角色动画切图.xml" path="/"/>
+  </resources>
+  <publish name=""/>
+</packageDescription>

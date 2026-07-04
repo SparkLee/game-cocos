@@ -811,6 +811,7 @@
     <component id="rmk0mg" name="Common_Info.xml" path="/Page/" exported="true"/>
     <component id="rmk0mh" name="box_info.xml" path="/Component/"/>
     <component id="rmk0mj" name="btn_close.xml" path="/Component/"/>
+    <movieclip id="euhemk" name="MovieClip1.jta" path="/Page/"/>
   </resources>
   <publish name="" genCode="true"/>
 </packageDescription>
