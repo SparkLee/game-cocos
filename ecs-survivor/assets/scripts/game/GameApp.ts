@@ -1,7 +1,7 @@
 import { _decorator, Color, Component, Graphics, Label, Node, UITransform } from 'cc';
 import { World } from '../ecs/World';
+import { loadSpineCatalog } from './SpineCatalog';
 import {
-    Caption,
     Health,
     Player,
     Position,
@@ -9,7 +9,6 @@ import {
     Tint,
     Velocity,
     Weapon,
-    makeCaption,
     makeHealth,
     makePosition,
     makeRadius,
@@ -65,8 +64,17 @@ export class GameApp extends Component {
             .register(this.spawnSystem)                 // 在主角周围刷怪
             .register(new MagnetSystem(this.ctx))       // 经验球吸向主角
             .register(new XpSystem(this.ctx))           // 拾取升级
-            .register(this.renderSystem)                // ECS 数据 → 真实 Node
+            .register(this.renderSystem)                // ECS 数据 → 真实 Node / Spine
             .register(new HudSystem(this.ctx));         // 叠字
+        void this.boot();
+    }
+
+    /** 先加载四套 Spine，再开局，避免第一帧实体没有骨骼。 */
+    private async boot(): Promise<void> {
+        if (this.ctx.hud.banner) {
+            this.ctx.hud.banner.string = '加载 Spine...';
+        }
+        await loadSpineCatalog(this.ctx.spines);
         this.startRun();
         this.started = true;
     }
@@ -103,11 +111,10 @@ export class GameApp extends Component {
         this.world.add(entity, Radius, makeRadius(20));
         this.world.add(entity, Health, makeHealth(100000));
         this.world.add(entity, Tint, makeTint(90, 230, 210));
-        this.world.add(entity, Caption, makeCaption('主角'));
         return entity;
     }
 
-    /** 消费本帧一次性按键：切碰撞、静音、敌人上限、暂停、重开。 */
+    /** 消费本帧一次性按键：切碰撞、静音、HUD、敌人上限、暂停、重开。 */
     private applySessionCommands(): void {
         const input = this.ctx.input;
         if (input.toggleHash) {
@@ -115,6 +122,12 @@ export class GameApp extends Component {
         }
         if (input.toggleMute) {
             this.ctx.sfx.muted = !this.ctx.sfx.muted;
+        }
+        if (input.toggleHud) {
+            this.ctx.hud.visible = !this.ctx.hud.visible;
+            if (this.ctx.hud.root) {
+                this.ctx.hud.root.active = this.ctx.hud.visible;
+            }
         }
         if (input.capPreset >= 0 && input.capPreset < ENEMY_CAP_PRESETS.length) {
             this.ctx.config.maxEnemies = ENEMY_CAP_PRESETS[input.capPreset];
@@ -149,7 +162,9 @@ export class GameApp extends Component {
         entitiesTransform.setContentSize(this.ctx.viewW, this.ctx.viewH);
         entitiesTransform.setAnchorPoint(0.5, 0.5);
         this.ctx.entityRoot = entities;
+        // 按绘制顺序分层：同类连续才能合批。普通怪和精英怪图集不同，混挂会来回切纹理。
         this.ctx.enemiesRoot = this.ensureNamed(entities, 'Enemies');
+        this.ctx.elitesRoot = this.ensureNamed(entities, 'Elites');
         this.ctx.bulletsRoot = this.ensureNamed(entities, 'Bullets');
         this.ctx.expOrbsRoot = this.ensureNamed(entities, 'ExpOrbs');
 
@@ -165,6 +180,7 @@ export class GameApp extends Component {
         const hud = this.ensureChild('HUD');
         const hudTransform = hud.getComponent(UITransform) ?? hud.addComponent(UITransform);
         hudTransform.setContentSize(this.ctx.viewW, this.ctx.viewH);
+        this.ctx.hud.root = hud;
         this.ctx.hud.stats = this.makeLabel(hud, 'Stats', -this.ctx.viewW * 0.5 + 24, this.ctx.viewH * 0.5 - 18, 560, 220, 18, new Color(214, 222, 232), Label.HorizontalAlign.LEFT, 0, 1);
         this.ctx.hud.systems = this.makeLabel(hud, 'Systems', this.ctx.viewW * 0.5 - 24, this.ctx.viewH * 0.5 - 18, 360, 280, 16, new Color(168, 180, 196), Label.HorizontalAlign.RIGHT, 1, 1);
         this.ctx.hud.help = this.makeLabel(hud, 'Help', -this.ctx.viewW * 0.5 + 24, 70, 620, 140, 16, new Color(139, 155, 180), Label.HorizontalAlign.LEFT, 0, 1);

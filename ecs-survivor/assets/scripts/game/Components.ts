@@ -73,10 +73,10 @@ export class Weapon {
     timer = 0;         // 距离下次开火的倒计时（秒）
     count = 2;         // 一次射出的弹道数
     damage = 120;      // 每发子弹的伤害，生成 Projectile 时拷过去
-    speed = 540;       // 子弹飞行速度（世界坐标 / 秒）
+    speed = 270;       // 子弹飞行速度（世界坐标 / 秒）
     range = 520;       // 自动瞄准的最远距离
     spread = 0.18;     // 多弹道时的夹角（弧度）
-    aimAngle = 0;      // 当前瞄准角（弧度），RenderSystem 用来转武器节点
+    aimAngle = 0;      // 当前瞄准角（弧度），RenderSystem 用来翻主角朝向
 }
 
 /** Experience = 经验。挂在经验球上，amount 是捡到后增加的 XP（Experience Points，经验值）。 */
@@ -118,7 +118,7 @@ export class Caption {
 
 /**
  * 表现节点。实体仍然只是 ID；RenderSystem 给它绑一个 Cocos Node。
- * 以后换 Spine：挂到子节点 Body 上，占位 Graphics 可以去掉。
+ * Spine 挂在子节点 Body 上；经验球没有骨骼，仍用 Graphics 圆。
  */
 export class View {
     node: Node | null = null;

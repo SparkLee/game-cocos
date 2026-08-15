@@ -1,0 +1,34 @@
+monster_101_wenzi.png
+	size: 256, 128
+	filter: Linear, Linear
+	pma: true
+dead/shen
+	bounds: 181, 84, 49, 42
+	offsets: 1, 1, 51, 45
+dead/shou
+	bounds: 44, 11, 33, 32
+	offsets: 1, 1, 35, 34
+dead/tou
+	bounds: 88, 28, 59, 61
+	rotate: 90
+dead/tui
+	bounds: 151, 55, 28, 32
+	offsets: 1, 4, 30, 37
+图层 1 拷贝
+	bounds: 2, 11, 40, 32
+	offsets: 1, 1, 42, 34
+图层 25 副本 2 拷贝 8 副本 2 拷贝
+	bounds: 88, 89, 91, 37
+	offsets: 8, 2, 107, 40
+图层 3
+	bounds: 2, 45, 84, 81
+	offsets: 1, 1, 85, 82
+图层 320 副本 拷贝
+	bounds: 181, 63, 45, 19
+	offsets: 1, 5, 49, 25
+图层 78 副本 2 拷贝
+	bounds: 79, 2, 25, 24
+图层 90 副本 拷贝
+	bounds: 232, 101, 25, 13
+	offsets: 1, 2, 27, 16
+	rotate: 90

@@ -15,6 +15,9 @@ export class HudSystem implements System {
     constructor(private readonly ctx: GameContext) {}
 
     update(world: World): void {
+        if (!this.ctx.hud.visible) {
+            return;
+        }
         const hud = this.ctx.hud;
         const health = world.get(this.ctx.player, Health);
         const hp = health ? Math.max(0, Math.ceil(health.current)) : 0;
@@ -57,12 +60,12 @@ export class HudSystem implements System {
                 '1. 海量同类实体：移动 / AI / 渲染各扫一遍数组',
                 '2. 组合优于继承：加 Elite 组件就是精英怪',
                 '3. 碰撞可批处理：空间哈希挂在 CollisionSystem',
-                '4. 逻辑在 ECS，画面是 Node：Body 上以后可换 Spine',
+                '4. 逻辑在 ECS，画面是 Node：Body 上挂 Spine',
             ].join('\n');
         }
 
         if (hud.hint) { // 底部：操作提示
-            hud.hint.string = `WASD / 按住左键移动    1-4 敌人上限 ${ENEMY_CAP_PRESETS.join('/')}    C 碰撞    M ${this.ctx.sfx.muted ? '已静音' : '静音'}    空格暂停    R 重开`;
+            hud.hint.string = `WASD / 按住左键移动    1-4 敌人上限 ${ENEMY_CAP_PRESETS.join('/')}    C 碰撞    M ${this.ctx.sfx.muted ? '已静音' : '静音'}    H 隐藏HUD    空格暂停    R 重开`;
         }
 
         if (hud.banner) { // 正中：死亡 / 暂停

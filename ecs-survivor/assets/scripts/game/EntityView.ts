@@ -1,47 +1,41 @@
-import { Color, ImageAsset, Label, Node, Sprite, SpriteFrame, Texture2D, UITransform } from 'cc';
+import { Color, ImageAsset, Node, Sprite, SpriteFrame, Texture2D, UITransform, sp } from 'cc';
+import { pickSpineAnimation, spineNativeHeight, applySpineSkin, SPINE_ANIMS, SPINE_SKINS, SpineKind } from './SpineCatalog';
 
 /**
- * 每个实体一棵小节点树，方便以后把 Visual 换成 Spine：
+ * 实体节点树：逻辑节点挂 Spine，经验球仍是空 Body（圆在 WorldDraw 上合批）。
  *
- *   Enemy / Player / Bullet / ExpOrb  （经验球，Experience Orb）
- *     Body      ← 朝向；以后 Spine 挂这里
- *       Ring    ← 描边（主角 / 精英），和 Visual 共用一张圆贴图才能合批
- *       Visual  ← Sprite 占位，有 Spine 后可删
- *       Weapon  ← 仅主角
- *     Caption   ← 只给主角和精英开，普通怪/子弹/经验球不开（Label 无法合批）
- *
- * 上千个 Graphics/Label 会各打一次 Draw Call。改成同一张白圆 Sprite，
- * 引擎才能合批；颜色用 sprite.color 染色。
+ *   Player / Enemy / Elite / Bullet / ExpOrb
+ *     Body      ← 怪 / 主角挂 Spine；子弹、经验球挂 Sprite
+ *       Visual  ← 仅主角占位 Sprite，有 Spine 后关掉
+ *       Weapon  ← 仅主角，有 Spine 后关掉
  */
-export type EntityKind = 'player' | 'enemy' | 'bullet' | 'expOrb';
+export type EntityKind = SpineKind | 'bullet' | 'expOrb';
 
 export interface EntityBinding {
     kind: EntityKind;
     node: Node;
     body: Node;
-    visual: Sprite;
-    ring: Sprite | null;
-    caption: Label | null;
+    visual: Sprite | null;
     weapon: Node | null;
+    skeleton: sp.Skeleton | null;
+    anim: string;
+    spineScale: number;
+    fittedRadius: number;
     paintedKey: string;
 }
 
-const LABEL_FILL = new Color(255, 255, 255, 255);
-const LABEL_OUTLINE = new Color(20, 22, 28, 230);
 const WEAPON_FILL = new Color(255, 220, 120, 255);
-const PLAYER_RING = new Color(180, 255, 240, 180);
-const ELITE_RING = new Color(255, 248, 200, 255);
 
 const KIND_NAME: Record<EntityKind, string> = {
     player: 'Player',
     enemy: 'Enemy',
+    elite: 'Elite',
     bullet: 'Bullet',
     expOrb: 'ExpOrb',
 };
 
 let circleFrame: SpriteFrame | null = null;
 
-/** 一张 64×64 白圆，所有实体 Sprite 共用，才能合进同一次 Draw Call。 */
 export function getCircleFrame(): SpriteFrame {
     if (circleFrame) {
         return circleFrame;
@@ -94,95 +88,158 @@ export function createEntityNode(kind: EntityKind, layer: number): EntityBinding
     bodyTransform.setContentSize(40, 40);
     node.addChild(body);
 
-    const needRing = kind === 'player' || kind === 'enemy';
-    const ring = needRing ? addSprite(body, 'Ring', layer, 48) : null;
-    if (ring) {
-        ring.node.active = false;
-    }
-    const visual = addSprite(body, 'Visual', layer, 40);
-
+    let visual: Sprite | null = null;
     let weapon: Node | null = null;
+
     if (kind === 'player') {
+        visual = addSprite(body, 'Visual', layer, 40);
         const weaponSprite = addSprite(body, 'Weapon', layer, 22);
         weapon = weaponSprite.node;
         weaponSprite.color = WEAPON_FILL;
-        const wt = weapon.getComponent(UITransform);
-        wt?.setContentSize(24, 10);
+        weapon.getComponent(UITransform)?.setContentSize(24, 10);
+    }
+    if (kind === 'bullet' || kind === 'expOrb') {
+        visual = addSprite(body, 'Visual', layer, 40);
     }
 
-    let caption: Label | null = null;
-    if (kind === 'player' || kind === 'enemy') {
-        const captionNode = new Node('Caption');
-        captionNode.layer = layer;
-        const captionTransform = captionNode.addComponent(UITransform);
-        captionTransform.setContentSize(88, 32);
-        captionTransform.setAnchorPoint(0.5, 0.5);
-        node.addChild(captionNode);
-        caption = captionNode.addComponent(Label);
-        caption.useSystemFont = true;
-        caption.fontFamily = 'Microsoft YaHei, PingFang SC, sans-serif';
-        caption.horizontalAlign = Label.HorizontalAlign.CENTER;
-        caption.verticalAlign = Label.VerticalAlign.CENTER;
-        caption.overflow = Label.Overflow.NONE;
-        caption.cacheMode = Label.CacheMode.CHAR;
-        caption.enableOutline = true;
-        caption.outlineColor = LABEL_OUTLINE;
-        caption.outlineWidth = 2;
-        caption.color = LABEL_FILL;
-        caption.string = '';
-        captionNode.active = kind === 'player';
-    }
-
-    return { kind, node, body, visual, ring, caption, weapon, paintedKey: '' };
+    return {
+        kind,
+        node,
+        body,
+        visual,
+        weapon,
+        skeleton: null,
+        anim: '',
+        spineScale: 1,
+        fittedRadius: 0,
+        paintedKey: '',
+    };
 }
 
-export function paintPlaceholder(
-    binding: EntityBinding,
-    radius: number,
-    fill: Color,
-    elite: boolean,
-    captionText: string,
-): void {
-    const showCaption = !!(binding.caption && (binding.kind === 'player' || elite));
-    const key = `${radius}|${fill.r},${fill.g},${fill.b}|${elite ? 1 : 0}|${showCaption ? captionText : ''}`;
+/** 把 SkeletonData 挂到 Body 上。同一节点只绑一次，对象池复用时跳过。 */
+export function bindSpine(binding: EntityBinding, data: sp.SkeletonData, radius: number): void {
+    if (binding.kind === 'expOrb' || binding.kind === 'bullet') {
+        return;
+    }
+    let skeleton = binding.skeleton;
+    if (!skeleton) {
+        skeleton = binding.body.getComponent(sp.Skeleton) ?? binding.body.addComponent(sp.Skeleton);
+        binding.skeleton = skeleton;
+    }
+    if (skeleton.skeletonData !== data) {
+        skeleton.premultipliedAlpha = true;
+        // 同纹理连续绘制才能合批。主角只有一个，开了也合不上。
+        skeleton.enableBatch = binding.kind !== 'player';
+        skeleton.skeletonData = data;
+        applySpineSkin(skeleton, data, SPINE_SKINS[binding.kind as SpineKind]);
+        binding.anim = '';
+        binding.fittedRadius = 0;
+    }
+    if (binding.visual) {
+        binding.visual.node.active = false;
+    }
+    if (binding.weapon) {
+        binding.weapon.active = false;
+    }
+    fitSpine(binding, radius);
+    const preferred = SPINE_ANIMS[binding.kind as SpineKind].move;
+    playSpine(binding, pickSpineAnimation(data, preferred));
+}
+
+export function fitSpine(binding: EntityBinding, radius: number): void {
+    const data = binding.skeleton?.skeletonData;
+    if (!data || binding.fittedRadius === radius) {
+        return;
+    }
+    binding.fittedRadius = radius;
+    const native = spineNativeHeight(data);
+    const target = visualHeight(binding.kind, radius);
+    binding.spineScale = target / native;
+    binding.body.setScale(binding.spineScale, binding.spineScale);
+    const box = Math.max(80, radius * 8, target * 1.5);
+    binding.body.getComponent(UITransform)?.setContentSize(box, box);
+    binding.node.getComponent(UITransform)?.setContentSize(box, box);
+}
+
+function visualHeight(kind: EntityKind, radius: number): number {
+    if (kind === 'player') {
+        return Math.max(radius * 2.4, 72);
+    }
+    return radius * 2.4;
+}
+
+/** bullet_1 原图朝上（+Y）。Cocos angle 0 也是 +Y，飞行方向从 +X 算，所以转角要减 90°。 */
+export function faceBullet(binding: EntityBinding, radians: number): void {
+    binding.body.angle = (radians * 180) / Math.PI - 90;
+}
+
+const BULLET_H = 36;
+const BULLET_W = (35 / 69) * BULLET_H;
+
+export function bindBulletSprite(binding: EntityBinding, frame: SpriteFrame): void {
+    bindSprite(binding, frame, BULLET_W, BULLET_H);
+}
+
+const EXP_ORB_SIZE = 32;
+
+export function bindExpOrbSprite(binding: EntityBinding, frame: SpriteFrame): void {
+    bindSprite(binding, frame, EXP_ORB_SIZE, EXP_ORB_SIZE);
+}
+
+function bindSprite(binding: EntityBinding, frame: SpriteFrame, width: number, height: number): void {
+    if (!binding.visual) {
+        return;
+    }
+    binding.visual.spriteFrame = frame;
+    binding.visual.sizeMode = Sprite.SizeMode.CUSTOM;
+    binding.visual.trim = false;
+    binding.visual.node.active = true;
+    binding.visual.node.getComponent(UITransform)?.setContentSize(width, height);
+    binding.body.getComponent(UITransform)?.setContentSize(width + 8, height + 8);
+    binding.node.getComponent(UITransform)?.setContentSize(width + 8, height + 8);
+    binding.body.setScale(1, 1);
+    binding.body.angle = 0;
+    binding.spineScale = 1;
+}
+
+export function playSpine(binding: EntityBinding, name: string): void {
+    const skeleton = binding.skeleton;
+    if (!skeleton || !name || binding.anim === name) {
+        return;
+    }
+    try {
+        skeleton.setAnimation(0, name, true);
+        binding.anim = name;
+    } catch {
+        binding.anim = '';
+    }
+}
+
+export function faceSpine(binding: EntityBinding, radians: number, flip: boolean): void {
+    if (flip) {
+        const facing = Math.cos(radians) >= 0 ? 1 : -1;
+        binding.body.angle = 0;
+        binding.body.setScale(binding.spineScale * facing, binding.spineScale);
+        return;
+    }
+    binding.body.setScale(binding.spineScale, binding.spineScale);
+    binding.body.angle = (radians * 180) / Math.PI;
+}
+
+export function paintPlayer(binding: EntityBinding, radius: number, fill: Color): void {
+    const key = `${radius}|${fill.r},${fill.g},${fill.b}`;
     if (binding.paintedKey === key) {
         return;
     }
     binding.paintedKey = key;
-
     const size = Math.max(8, radius * 2);
     binding.node.getComponent(UITransform)?.setContentSize(size + 8, size + 8);
     binding.body.getComponent(UITransform)?.setContentSize(size + 8, size + 8);
-    binding.visual.node.getComponent(UITransform)?.setContentSize(size, size);
-    binding.visual.color = new Color(fill.r, fill.g, fill.b, fill.a);
-
-    if (binding.ring) {
-        const showRing = binding.kind === 'player' || elite;
-        binding.ring.node.active = showRing;
-        if (showRing) {
-            const ringSize = size + (binding.kind === 'player' ? 8 : 6);
-            binding.ring.node.getComponent(UITransform)?.setContentSize(ringSize, ringSize);
-            binding.ring.color = binding.kind === 'player' ? PLAYER_RING : ELITE_RING;
-        }
+    if (binding.visual) {
+        binding.visual.node.getComponent(UITransform)?.setContentSize(size, size);
+        binding.visual.color = new Color(fill.r, fill.g, fill.b, fill.a);
     }
-
     if (binding.weapon) {
         binding.weapon.setPosition(radius + 2, 0, 0);
-    }
-
-    if (binding.caption) {
-        binding.caption.node.active = showCaption;
-        if (showCaption && binding.caption.string !== captionText) {
-            binding.caption.string = captionText;
-        }
-        if (showCaption) {
-            const fontSize = captionText.length > 2
-                ? Math.max(9, Math.min(12, Math.floor(radius * 0.52)))
-                : Math.max(10, Math.min(14, Math.floor(radius * 0.7)));
-            if (binding.caption.fontSize !== fontSize) {
-                binding.caption.fontSize = fontSize;
-                binding.caption.lineHeight = fontSize + 2;
-            }
-        }
     }
 }

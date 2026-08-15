@@ -1,0 +1,263 @@
+role_yuanjun.png
+	size: 1024, 1024
+	filter: Linear, Linear
+	pma: true
+1
+	bounds: 819, 247, 91, 68
+	rotate: 90
+10
+	bounds: 213, 548, 186, 184
+11
+	bounds: 965, 213, 56, 52
+12
+	bounds: 701, 41, 50, 53
+13
+	bounds: 278, 290, 109, 112
+	rotate: 90
+14
+	bounds: 574, 87, 74, 64
+15
+	bounds: 965, 599, 57, 53
+16
+	bounds: 275, 160, 63, 70
+	rotate: 90
+17
+	bounds: 654, 157, 59, 65
+	rotate: 90
+18
+	bounds: 497, 112, 75, 53
+19
+	bounds: 392, 282, 132, 116
+2
+	bounds: 526, 282, 116, 82
+	rotate: 90
+20
+	bounds: 610, 470, 120, 77
+21
+	bounds: 956, 412, 66, 71
+22
+	bounds: 214, 4, 56, 67
+	rotate: 90
+23
+	bounds: 497, 167, 77, 56
+24
+	bounds: 809, 162, 78, 83
+3
+	bounds: 736, 856, 224, 166
+4
+	bounds: 277, 259, 108, 29
+5
+	bounds: 387, 251, 108, 29
+6
+	bounds: 911, 336, 92, 43
+	rotate: 90
+7
+	bounds: 66, 6, 105, 47
+8
+	bounds: 694, 229, 43, 25
+	rotate: 90
+9
+	bounds: 213, 529, 34, 17
+lita
+	bounds: 276, 734, 233, 93
+lita1
+	bounds: 701, 6, 51, 33
+lita10
+	bounds: 401, 546, 186, 173
+	rotate: 90
+lita11
+	bounds: 964, 150, 61, 56
+	rotate: 90
+lita12
+	bounds: 350, 103, 70, 73
+lita13
+	bounds: 876, 81, 34, 34
+lita14
+	bounds: 965, 654, 71, 57
+	rotate: 90
+lita15
+	bounds: 183, 160, 94, 90
+	offsets: 1, 0, 95, 90
+	rotate: 90
+lita16
+	bounds: 831, 64, 48, 43
+	rotate: 90
+lita17
+	bounds: 269, 73, 85, 62
+	offsets: 0, 9, 85, 71
+	rotate: 90
+lita18
+	bounds: 842, 430, 75, 94
+	rotate: 90
+lita19
+	bounds: 422, 75, 61, 72
+	rotate: 90
+lita2
+	bounds: 350, 81, 70, 20
+lita20
+	bounds: 187, 256, 73, 88
+	rotate: 90
+lita21
+	bounds: 2, 2, 51, 62
+	rotate: 90
+lita22
+	bounds: 889, 158, 81, 73
+	rotate: 90
+lita23
+	bounds: 610, 274, 90, 109
+	rotate: 90
+lita24
+	bounds: 956, 347, 63, 66
+	rotate: 90
+lita25
+	bounds: 962, 870, 60, 59
+lita26
+	bounds: 965, 267, 56, 78
+lita27
+	bounds: 2, 750, 272, 272
+lita3
+	bounds: 804, 4, 40, 36
+	rotate: 90
+lita4
+	bounds: 706, 798, 39, 28
+	rotate: 90
+lita5
+	bounds: 912, 697, 51, 28
+lita6
+	bounds: 732, 567, 149, 128
+lita7
+	bounds: 276, 829, 227, 193
+lita8
+	bounds: 962, 931, 60, 91
+	offsets: 0, 0, 60, 92
+lita9
+	bounds: 428, 138, 67, 53
+mai1
+	bounds: 883, 571, 80, 124
+	offsets: 0, 1, 80, 125
+mai10
+	bounds: 283, 2, 69, 85
+	rotate: 90
+mai11
+	bounds: 347, 178, 79, 71
+mai12
+	bounds: 721, 176, 86, 72
+mai13
+	bounds: 723, 340, 88, 106
+	rotate: 90
+mai14
+	bounds: 576, 549, 185, 154
+	rotate: 90
+mai15
+	bounds: 889, 241, 74, 93
+mai16
+	bounds: 831, 340, 88, 78
+	offsets: 0, 0, 88, 79
+	rotate: 90
+mai17
+	bounds: 654, 96, 65, 59
+mai18
+	bounds: 721, 250, 96, 88
+mai19
+	bounds: 956, 485, 72, 66
+	rotate: 90
+mai2
+	bounds: 494, 10, 70, 43
+mai3
+	bounds: 753, 46, 52, 39
+	rotate: 90
+mai4
+	bounds: 721, 148, 71, 26
+mai5
+	bounds: 912, 87, 31, 28
+mai6
+	bounds: 571, 428, 116, 37
+	rotate: 90
+mai7
+	bounds: 333, 73, 15, 85
+mai8
+	bounds: 2, 525, 209, 223
+mai9
+	bounds: 732, 430, 75, 108
+	rotate: 90
+图层 1
+	bounds: 420, 2, 38, 10
+图层 1 副本
+	bounds: 789, 100, 46, 27
+	rotate: 90
+图层 2
+	bounds: 644, 25, 60, 55
+	rotate: 90
+图层 66 副本
+	bounds: 497, 225, 97, 55
+图层 72 副本 2
+	bounds: 721, 100, 46, 66
+	rotate: 90
+图层 72 副本 5
+	bounds: 754, 3, 41, 48
+	rotate: 90
+图层 72 副本 6
+	bounds: 428, 193, 56, 67
+	rotate: 90
+图层 73 副本 2
+	bounds: 870, 117, 40, 39
+图层 73 副本 3
+	bounds: 183, 62, 84, 96
+图层 73 副本 4
+	bounds: 505, 839, 183, 229
+	rotate: 90
+图层 75
+	bounds: 395, 400, 144, 174
+	rotate: 90
+图层 75 副本 3
+	bounds: 706, 760, 28, 36
+图层 75 副本 4
+	bounds: 732, 507, 121, 58
+图层 76
+	bounds: 610, 366, 111, 102
+图层 76 副本 3
+	bounds: 912, 727, 90, 127
+图层 86
+	bounds: 912, 117, 34, 39
+图层 86 副本 15
+	bounds: 173, 2, 39, 51
+图层 86 副本 2
+	bounds: 511, 736, 101, 193
+	rotate: 90
+图层 86 副本 3
+	bounds: 187, 331, 89, 192
+图层 86 副本 4
+	bounds: 278, 401, 145, 115
+	rotate: 90
+图层 86 副本 5
+	bounds: 596, 218, 96, 54
+图层 86 副本 7
+	bounds: 794, 46, 35, 52
+图层 86 副本 8
+	bounds: 2, 55, 179, 230
+图层 86 副本 9
+	bounds: 736, 697, 157, 174
+	rotate: 90
+图层 90 拷贝 123
+	bounds: 576, 153, 63, 76
+	rotate: 90
+图层 90 拷贝 311
+	bounds: 420, 14, 59, 72
+	rotate: 90
+图层 90 拷贝 322
+	bounds: 965, 559, 57, 38
+图层 90 拷贝 32321
+	bounds: 2, 287, 183, 236
+图层 90 拷贝 3321
+	bounds: 370, 5, 74, 48
+	rotate: 90
+图层 90 拷贝 332122
+	bounds: 818, 114, 50, 46
+图层 90 拷贝 333
+	bounds: 572, 26, 59, 70
+	rotate: 90
+图层 90 拷贝 35654
+	bounds: 496, 55, 55, 74
+	rotate: 90
+图层 90 拷贝 36554
+	bounds: 883, 507, 56, 62

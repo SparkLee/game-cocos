@@ -1,6 +1,6 @@
 import { Entity, System, World } from '../../ecs/World';
 import { Enemy, Experience, Player, Position, Projectile, Radius } from '../Components';
-import { GameContext } from '../GameConfig';
+import { GameContext, PLAYER_CONTACT_RANGE } from '../GameConfig';
 import { SpatialHash } from '../SpatialHash';
 
 /**
@@ -93,15 +93,21 @@ export class CollisionSystem implements System {
         const player = this.ctx.player;
         const playerComp = world.get(player, Player);
         const playerPos = world.get(player, Position);
-        const playerRadius = world.get(player, Radius);
-        if (!playerComp || !playerPos || !playerRadius || playerComp.contactTimer > 0) {
+        if (!playerComp || !playerPos || playerComp.contactTimer > 0) {
             return;
         }
-        query(playerPos.x, playerPos.y, playerRadius.value + 24, this.nearby); // +24 同样是给敌人半径留余量
+        query(playerPos.x, playerPos.y, PLAYER_CONTACT_RANGE, this.nearby);
+        const rangeSq = PLAYER_CONTACT_RANGE * PLAYER_CONTACT_RANGE;
         for (let i = 0; i < this.nearby.length; i++) {
             const target = this.nearby[i];
             const enemy = world.get(target, Enemy);
-            if (!enemy || !overlap(world, playerPos, playerRadius.value, target)) {
+            const pos = world.get(target, Position);
+            if (!enemy || !pos) {
+                continue;
+            }
+            const dx = pos.x - playerPos.x;
+            const dy = pos.y - playerPos.y;
+            if (dx * dx + dy * dy > rangeSq) {
                 continue;
             }
             this.ctx.events.damages.push({ target: player, amount: enemy.damage, source: target });

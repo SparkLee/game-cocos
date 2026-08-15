@@ -18,6 +18,7 @@ export class InputSystem implements System {
     private pauseLatch = false;
     private hashLatch = false;
     private muteLatch = false;
+    private hudLatch = false;
     private capLatch = -1;
 
     constructor(private readonly ctx: GameContext) {
@@ -62,11 +63,13 @@ export class InputSystem implements System {
         state.togglePause = this.pauseLatch;
         state.toggleHash = this.hashLatch;
         state.toggleMute = this.muteLatch;
+        state.toggleHud = this.hudLatch;
         state.capPreset = this.capLatch;
         this.restartLatch = false;
         this.pauseLatch = false;
         this.hashLatch = false;
         this.muteLatch = false;
+        this.hudLatch = false;
         this.capLatch = -1; // 一次性标志本帧消费完就清
 
         const player = _world.get(this.ctx.player, Player);
@@ -87,6 +90,7 @@ export class InputSystem implements System {
         if (event.keyCode === KeyCode.SPACE) this.pauseLatch = true;
         if (event.keyCode === KeyCode.KEY_C) this.hashLatch = true;
         if (event.keyCode === KeyCode.KEY_M) this.muteLatch = true;
+        if (event.keyCode === KeyCode.KEY_H) this.hudLatch = true;
         const preset = event.keyCode - KeyCode.DIGIT_1; // Digit1..4 是连续枚举，减 Digit1 得到 0..3
         if (preset >= 0 && preset < ENEMY_CAP_PRESETS.length) {
             this.capLatch = preset;

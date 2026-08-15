@@ -149,8 +149,8 @@
             "_value": false
           },
           "spine": {
-            "_value": false,
-            "_option": "spine-3.8"
+            "_value": true,
+            "_option": "spine-4.2"
           },
           "spine-3.8": {
             "_value": false,
@@ -159,7 +159,7 @@
             }
           },
           "spine-4.2": {
-            "_value": false,
+            "_value": true,
             "_flags": {
               "LOAD_SPINE_MANUALLY": false
             }
@@ -190,7 +190,9 @@
             "_value": false
           }
         },
-        "flags": {},
+        "flags": {
+          "LOAD_SPINE_MANUALLY": false
+        },
         "includeModules": [
           "2d",
           "affine-transform",
@@ -206,6 +208,7 @@
           "procedural-animation",
           "profiler",
           "rich-text",
+          "spine-4.2",
           "tween",
           "ui"
         ],

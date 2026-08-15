@@ -19,10 +19,11 @@
 | 1 / 2 / 3 / 4 | 敌人上限 2000 / 5000 / 10000 / 20000 |
 | C | 切换碰撞：空间哈希 ↔ 全对全 |
 | M | 静音 / 取消静音 |
+| H | 隐藏 / 显示 HUD |
 | 空格 | 暂停 |
 | R | 重新开始 |
 
-角色会自动朝最近的敌人开火。击杀掉经验球，靠近即可吸取；升级会加伤害、缩短冷却，偶数级加弹道。金色描边的是精英怪——它只是多挂了一个 `Elite` 组件。
+角色会自动朝最近的敌人开火。击杀掉经验球，靠近即可吸取；升级会加伤害、缩短冷却，偶数级加弹道。精英怪用另一套 Spine（`monster_111_wenzi`），它只是多挂了一个 `Elite` 组件。
 
 射击、命中、击杀、拾取、升级、受伤和死亡都有短音效（Web Audio 合成，无需音频文件）。浏览器要先按一次键或点一下才会出声。`M` 可静音。
 
@@ -43,11 +44,35 @@
 1. **海量同类实体**  
    敌人、子弹、经验球数量大、行为高度重复。`EnemyAISystem` / `MovementSystem` / `RenderSystem` 各做一次线性扫描即可。
 2. **组合优于继承**  
-   普通怪、精英怪、经验球没有继承树。精英 = 普通敌人再 `add(Elite)`。`RenderSystem` 看到 `Elite` 就画金边，`CombatSystem` 看到就掉更多经验。
+   普通怪、精英怪、经验球没有继承树。精英 = 普通敌人再 `add(Elite)`。`RenderSystem` 看到 `Elite` 就换精英 Spine，`CombatSystem` 看到就掉更多经验。
 3. **碰撞必须批处理**  
    割草最贵的是「子弹 × 敌人」。按 `C` 可对比空间哈希和全对全，右上角 `Collision` 耗时会拉开。实体越多，差距越明显。
 4. **逻辑在 ECS，画面是 Node**  
-   实体仍然只是 ID + 数据，`update()` 不写在节点上。`RenderSystem` 给每个主角 / 敌人 / 子弹 / 经验球绑一棵 Cocos 节点（`Body` 上以后可挂 Spine）。网格仍用一个 `Graphics` 画。
+   实体仍然只是 ID + 数据，`update()` 不写在节点上。`RenderSystem` 给每个主角 / 敌人 / 子弹 / 经验球绑一棵 Cocos 节点。主角和怪的 `Body` 上挂 Spine，子弹用 `bullet_1` 图，经验球用 `icon_wurenjWeapon_312`；网格和加载失败时的占位圆仍用 `Graphics`。
+
+## 合批要点（节点顺序也会拆批）
+
+Cocos 2D 按节点树先序遍历来画，碰到谁画谁，**不会**先把同类抽出来再画。合批条件是：同一纹理、同一材质、同一混合模式，并且在这条绘制队列里**连续**。中间插一张别的图，批就断。
+
+所以 `Entities` 下按层拆开，让同类连在一起画：
+
+```
+Entities
+  Enemies    普通怪（monster_101）一整层 → 尽量一批
+  Elites     精英怪（monster_111）一整层 → 另一批
+  Bullets    子弹图
+  ExpOrbs    经验球图
+  Player     主角单独一棵，enableBatch 关掉
+```
+
+不要把普通怪和精英怪挂在同一个父节点下。兄弟节点从左到右一旦变成「普通 / 精英 / 普通」，图集会来回切换，普通怪会被拆成多批。
+
+另外：
+
+- 怪要开 `sp.Skeleton.enableBatch`；主角只有一个，开了也合不上，关掉以免掺进怪的批。
+- 同一套 Spine 播 `walk` 还是 `attack`、左右翻转、受击变色，一般不断批。
+- 屏外不挂节点，不参与绘制。
+- 顶点太多时引擎会自动切批，这是正常的。
 
 ## 建议对照实验
 
@@ -60,13 +85,16 @@
 ```
 ecs-survivor/
 ├── assets/scenes/main.scene          # 启动场景（Canvas + GameApp）
+├── assets/resources/spines/          # 主角 / 普通怪 / 精英怪
+├── assets/resources/images/          # 子弹图、经验球图
 └── assets/scripts/
     ├── ecs/World.ts                  # Entity / Sparse Set / System / World
     └── game/
         ├── Components.ts             # 纯数据组件
         ├── GameConfig.ts             # 运行时上下文、HUD、输入
         ├── SpatialHash.ts            # 均匀网格空间哈希
-        ├── EntityView.ts             # 实体节点树（Body / Visual / Weapon）
+        ├── EntityView.ts             # 实体节点树（Body 挂 Spine）
+        ├── SpineCatalog.ts           # 加载骨骼和子弹图
         ├── GameApp.ts                # 启动、建视图、注册系统
         └── systems/                  # 一系统只做一件事
 ```

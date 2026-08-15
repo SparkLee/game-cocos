@@ -1,9 +1,11 @@
 import { Graphics, Label, Node } from 'cc';
 import { Entity } from '../ecs/World';
 import { Sfx } from './Sfx';
+import { SpineCatalog } from './SpineCatalog';
 
 export const VIEW_W = 1280;
 export const VIEW_H = 720;
+export const PLAYER_CONTACT_RANGE = 200; // 敌人碰到主角的距离；精英 attack2 也用这个
 
 /** 本局可调参数。敌人上限运行中按 1–4 切换。 */
 export class GameConfig {
@@ -21,6 +23,7 @@ export class InputState {
     togglePause = false;
     toggleHash = false;
     toggleMute = false;
+    toggleHud = false;         // H：隐藏 / 显示 HUD
     capPreset = -1;            // 1–4 对应 ENEMY_CAP_PRESETS 下标，-1 表示没按
 }
 
@@ -37,11 +40,13 @@ export class GameEvents {
 
 /** HUD 五块 Label 的引用，文字由 HudSystem 填。 */
 export class HudView {
+    root: Node | null = null;           // HUD 根节点，按 H 开关显示
     stats: Label | null = null;     // 左上：状态
     systems: Label | null = null;   // 右上：耗时
     help: Label | null = null;      // 左下：说明
     hint: Label | null = null;      // 底部：按键
     banner: Label | null = null;    // 正中：暂停 / 死亡
+    visible = true;
 }
 
 /** 一局游戏的共享状态。System 之间不互相引用，都读这份上下文。 */
@@ -51,10 +56,12 @@ export class GameContext {
     readonly config = new GameConfig();
     readonly hud = new HudView();
     readonly sfx = new Sfx();
+    readonly spines = new SpineCatalog();  // 主角 / 怪的 SkeletonData + 子弹图，GameApp 启动时加载
 
-    graphics: Graphics | null = null;  // 只画地面网格
+    graphics: Graphics | null = null;  // 地面网格 + 经验球占位圆
     entityRoot: Node | null = null;    // 实体节点的父节点，跟主角反向平移当相机
-    enemiesRoot: Node | null = null;
+    enemiesRoot: Node | null = null;   // 普通怪，单独一层方便同图集合批
+    elitesRoot: Node | null = null;    // 精英怪，图集不同，不能和普通怪穿插
     bulletsRoot: Node | null = null;
     expOrbsRoot: Node | null = null;
     player: Entity = 0;

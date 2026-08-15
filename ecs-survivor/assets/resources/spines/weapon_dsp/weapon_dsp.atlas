@@ -1,0 +1,30 @@
+weapon_dsp.png
+	size: 512, 128
+	filter: Linear, Linear
+	pma: true
+1
+	bounds: 2, 2, 30, 44
+	offsets: 7, 12, 128, 64
+	rotate: 90
+2
+	bounds: 356, 63, 77, 58
+	offsets: 6, 3, 128, 64
+3
+	bounds: 435, 69, 73, 52
+	offsets: 9, 4, 128, 64
+4
+	bounds: 237, 40, 60, 36
+	offsets: 4, 14, 128, 64
+图层 13 副本 2
+	bounds: 2, 34, 132, 87
+	offsets: 1, 1, 134, 89
+图层 3 副本
+	bounds: 136, 43, 99, 78
+图层 3 副本 3
+	bounds: 340, 4, 57, 60
+	rotate: 90
+图层 3 副本 4
+	bounds: 299, 37, 39, 39
+图层 3 副本 5
+	bounds: 237, 78, 43, 117
+	rotate: 90
