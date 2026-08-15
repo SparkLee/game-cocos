@@ -72,7 +72,7 @@ export class Projectile {
 export class Weapon {
     cooldown = 0.38;   // 开火间隔（秒）
     timer = 0;         // 距离下次开火的倒计时（秒）
-    count = 1;         // 一次射出的弹道数
+    count = 2;         // 一次射出的弹道数
     damage = 120;      // 每发子弹的伤害，生成 Projectile 时拷过去
     speed = 540;       // 子弹飞行速度（世界坐标 / 秒）
     range = 520;       // 自动瞄准的最远距离

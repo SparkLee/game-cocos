@@ -6,7 +6,7 @@ export const VIEW_W = 1280;
 export const VIEW_H = 720;
 
 export class GameConfig {
-    maxEnemies = 500;
+    maxEnemies = 5000;
     useSpatialHash = true;
     spawnPerSecond = 8;
     enemyHpScale = 1;
@@ -76,7 +76,7 @@ export class GameContext {
     }
 }
 
-export const ENEMY_CAP_PRESETS = [200, 500, 1000, 2000];
+export const ENEMY_CAP_PRESETS = [2000, 5000, 10000, 20000];
 
 export function xpNeeded(level: number): number {
     return Math.floor(12 + (level - 1) * 10 + (level - 1) * (level - 1) * 1.6);

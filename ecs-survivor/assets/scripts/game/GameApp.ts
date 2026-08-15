@@ -34,8 +34,8 @@ const { ccclass, property } = _decorator;
 
 @ccclass('GameApp')
 export class GameApp extends Component {
-    @property({ tooltip: '开局敌人上限，运行中按 1-4 切换 200/500/1000/2000' })
-    maxEnemies = 500;
+    @property({ tooltip: '开局敌人上限，运行中按 1-4 切换 2000/5000/10000/20000' })
+    maxEnemies = 5000;
 
     private readonly ctx = new GameContext();
     private readonly world = new World();
@@ -92,7 +92,7 @@ export class GameApp extends Component {
         this.world.add(entity, Position, makePosition(0, 0));
         this.world.add(entity, Velocity, makeVelocity(0, 0));
         this.world.add(entity, Radius, makeRadius(20));
-        this.world.add(entity, Health, makeHealth(10000));
+        this.world.add(entity, Health, makeHealth(100000));
         this.world.add(entity, Tint, makeTint(90, 230, 210));
         this.world.add(entity, Caption, makeCaption('主角'));
         return entity;
