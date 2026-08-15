@@ -82,7 +82,7 @@ export class ComponentStore<T> {
 export class World {
     readonly systemMs: Record<string, number> = {};
 
-    private nextId = 1;
+    private nextEntityId = 1;
     private readonly alive = new Set<Entity>();
     private readonly pendingDestroy = new Set<Entity>();
     private readonly stores = new Map<Ctor<unknown>, ComponentStore<unknown>>();
@@ -92,13 +92,18 @@ export class World {
         return this.alive.size - this.pendingDestroy.size;
     }
 
+    /** 下一个将要分配的实体 ID（已发出的最大 ID + 1）。 */
+    get nextId(): number {
+        return this.nextEntityId;
+    }
+
     register(system: System): this {
         this.systems.push(system);
         return this;
     }
 
     create(): Entity {
-        const entity = this.nextId++;
+        const entity = this.nextEntityId++;
         this.alive.add(entity);
         return entity;
     }
@@ -120,6 +125,7 @@ export class World {
         return store.add(entity, value) as T;
     }
 
+    /** 读取实体上指定类型的组件；没有则返回 undefined。 */
     get<T>(entity: Entity, ctor: Ctor<T>): T | undefined {
         return this.store(ctor).get(entity) as T | undefined;
     }
@@ -187,7 +193,7 @@ export class World {
         this.alive.clear();
         this.pendingDestroy.clear();
         this.stores.forEach((store) => store.clear());
-        this.nextId = 1;
+        this.nextEntityId = 1;
         for (const key of Object.keys(this.systemMs)) {
             this.systemMs[key] = 0;
         }

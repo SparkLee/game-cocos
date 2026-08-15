@@ -25,18 +25,19 @@ export class Health {
     max = 1;
 }
 
+/** Player = 玩家 / 主角。只挂在主角实体上；位置、血量、武器分别在 Position、Health、Weapon 里。 */
 export class Player {
-    moveSpeed = 280;
-    pickupRadius = 26;
-    /** 磁力吸附半径：经验球进入这个距离就会被吸向主角。 */
-    magnetRadius = 90;
-    contactTimer = 0;
+    moveSpeed = 560;       // 移动速度（世界坐标 / 秒）
+    pickupRadius = 26;     // 拾取半径：经验球进入此距离就算捡到
+    magnetRadius = 450;    // 磁力半径：经验球进入此距离会被吸向主角
+    contactTimer = 0;      // 接触伤害冷却，>0 时碰到怪不会连续扣血
 }
 
+/** Enemy = 敌人。普通怪和精英怪都挂这个；精英只是再加 Elite 组件。 */
 export class Enemy {
-    damage = 8;
-    xp = 2;
-    kind = 0;
+    damage = 8;   // 碰到主角时造成的伤害
+    xp = 2;       // 被击杀掉落经验球的基础 XP
+    kind = 0;     // 种类：0 普通、1 快速、2 高血量
 }
 
 /** 加上这个组件就是精英：不必再写 EliteEnemy 子类。 */
@@ -69,13 +70,13 @@ export class Projectile {
  * 升级时改的也是这把 Weapon，下次开火才会打出更强的 Projectile。
  */
 export class Weapon {
-    cooldown = 0.38;
-    timer = 0;
-    count = 1;
-    damage = 120;
-    speed = 540;
-    range = 520;
-    spread = 0.18;
+    cooldown = 0.38;   // 开火间隔（秒）
+    timer = 0;         // 距离下次开火的倒计时（秒）
+    count = 1;         // 一次射出的弹道数
+    damage = 120;      // 每发子弹的伤害，生成 Projectile 时拷过去
+    speed = 540;       // 子弹飞行速度（世界坐标 / 秒）
+    range = 520;       // 自动瞄准的最远距离
+    spread = 0.18;     // 多弹道时的夹角（弧度）
 }
 
 /** Experience = 经验。挂在经验球上，amount 是捡到后增加的 XP（Experience Points，经验值）。 */
@@ -96,15 +97,17 @@ export class Lifetime {
     remaining = 1;
 }
 
+/** Tint = 色调。实体圆圈的颜色，RenderSystem 按这四个通道填色。 */
 export class Tint {
-    r = 255;
-    g = 255;
-    b = 255;
-    a = 255;
+    r = 255;   // 红 0–255
+    g = 255;   // 绿 0–255
+    b = 255;   // 蓝 0–255
+    a = 255;   // 不透明度 0–255，255 为完全不透明
 }
 
+/** HitFlash = 受击闪白。挨打时短暂把圆圈画成白色。 */
 export class HitFlash {
-    remaining = 0;
+    remaining = 0;   // 剩余闪白时间（秒），>0 时 RenderSystem 用白色绘制
 }
 
 /** 画在圆圈里的短标签，例如「主角」「普通怪」。 */
