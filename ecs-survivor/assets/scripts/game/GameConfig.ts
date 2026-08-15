@@ -1,4 +1,4 @@
-import { Graphics, Label } from 'cc';
+import { Graphics, Label, Node } from 'cc';
 import { Entity } from '../ecs/World';
 import { Sfx } from './Sfx';
 
@@ -48,6 +48,7 @@ export class GameContext {
     readonly sfx = new Sfx();
 
     graphics: Graphics | null = null;
+    labelRoot: Node | null = null;
     player: Entity = 0;
     paused = false;
     dead = false;

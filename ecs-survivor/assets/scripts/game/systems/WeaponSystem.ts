@@ -1,5 +1,6 @@
 import { System, World } from '../../ecs/World';
 import {
+    Caption,
     Enemy,
     Lifetime,
     Position,
@@ -8,6 +9,7 @@ import {
     Tint,
     Velocity,
     Weapon,
+    makeCaption,
     makeLifetime,
     makePosition,
     makeRadius,
@@ -76,7 +78,8 @@ function spawnBullet(world: World, x: number, y: number, angle: number, weapon: 
     world.add(entity, Projectile, projectile);
     world.add(entity, Position, makePosition(x, y));
     world.add(entity, Velocity, makeVelocity(Math.cos(angle) * weapon.speed, Math.sin(angle) * weapon.speed));
-    world.add(entity, Radius, makeRadius(5));
+    world.add(entity, Radius, makeRadius(12));
     world.add(entity, Tint, makeTint(255, 228, 120));
     world.add(entity, Lifetime, makeLifetime(1.15));
+    world.add(entity, Caption, makeCaption('子弹'));
 }

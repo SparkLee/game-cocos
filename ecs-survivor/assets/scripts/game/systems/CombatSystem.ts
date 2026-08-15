@@ -1,5 +1,6 @@
 import { System, World } from '../../ecs/World';
 import {
+    Caption,
     Elite,
     Enemy,
     Experience,
@@ -10,6 +11,7 @@ import {
     Position,
     Radius,
     Tint,
+    makeCaption,
     makePosition,
     makeRadius,
     makeTint,
@@ -77,8 +79,9 @@ export class CombatSystem implements System {
             world.add(gem, Experience, exp);
             world.add(gem, Magnet);
             world.add(gem, Position, makePosition(pos.x, pos.y));
-            world.add(gem, Radius, makeRadius(7));
+            world.add(gem, Radius, makeRadius(16));
             world.add(gem, Tint, makeTint(120, 230, 140));
+            world.add(gem, Caption, makeCaption('经验球'));
             this.ctx.kills += 1;
             this.ctx.sfx.play('kill');
         }

@@ -1,6 +1,7 @@
 import { _decorator, Color, Component, Graphics, Label, Node, UITransform } from 'cc';
 import { World } from '../ecs/World';
 import {
+    Caption,
     Health,
     Player,
     Position,
@@ -8,6 +9,7 @@ import {
     Tint,
     Velocity,
     Weapon,
+    makeCaption,
     makeHealth,
     makePosition,
     makeRadius,
@@ -89,9 +91,10 @@ export class GameApp extends Component {
         this.world.add(entity, Weapon);
         this.world.add(entity, Position, makePosition(0, 0));
         this.world.add(entity, Velocity, makeVelocity(0, 0));
-        this.world.add(entity, Radius, makeRadius(16));
+        this.world.add(entity, Radius, makeRadius(20));
         this.world.add(entity, Health, makeHealth(10000));
         this.world.add(entity, Tint, makeTint(90, 230, 210));
+        this.world.add(entity, Caption, makeCaption('主角'));
         return entity;
     }
 
@@ -129,6 +132,12 @@ export class GameApp extends Component {
         worldTransform.setContentSize(this.ctx.viewW, this.ctx.viewH);
         worldTransform.setAnchorPoint(0.5, 0.5);
         this.ctx.graphics = worldNode.getComponent(Graphics) ?? worldNode.addComponent(Graphics);
+
+        const labels = this.ensureChild('EntityLabels');
+        const labelsTransform = labels.getComponent(UITransform) ?? labels.addComponent(UITransform);
+        labelsTransform.setContentSize(this.ctx.viewW, this.ctx.viewH);
+        labelsTransform.setAnchorPoint(0.5, 0.5);
+        this.ctx.labelRoot = labels;
 
         const hud = this.ensureChild('HUD');
         const hudTransform = hud.getComponent(UITransform) ?? hud.addComponent(UITransform);

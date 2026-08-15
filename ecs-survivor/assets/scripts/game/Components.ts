@@ -77,6 +77,17 @@ export class HitFlash {
     remaining = 0;
 }
 
+/** 画在圆圈里的短标签，例如「主角」「普通怪」。 */
+export class Caption {
+    text = '';
+}
+
+export function makeCaption(text: string): Caption {
+    const c = new Caption();
+    c.text = text;
+    return c;
+}
+
 export function makePosition(x: number, y: number): Position {
     const c = new Position();
     c.x = x;

@@ -104,7 +104,7 @@
             "_value": false
           },
           "profiler": {
-            "_value": false
+            "_value": true
           },
           "occlusion-query": {
             "_value": false
@@ -204,6 +204,7 @@
           "marionette",
           "mask",
           "procedural-animation",
+          "profiler",
           "rich-text",
           "tween",
           "ui"

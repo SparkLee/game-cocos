@@ -1,5 +1,6 @@
 import { System, World } from '../../ecs/World';
 import {
+    Caption,
     Elite,
     Enemy,
     Health,
@@ -7,6 +8,7 @@ import {
     Radius,
     Tint,
     Velocity,
+    makeCaption,
     makeHealth,
     makePosition,
     makeRadius,
@@ -16,9 +18,9 @@ import {
 import { GameContext } from '../GameConfig';
 
 const KINDS = [
-    { kind: 0, speed: 72, hp: 18, radius: 12, damage: 8, xp: 2, tint: [232, 92, 86] },
-    { kind: 1, speed: 140, hp: 10, radius: 10, damage: 6, xp: 2, tint: [255, 164, 72] },
-    { kind: 2, speed: 42, hp: 70, radius: 20, damage: 14, xp: 5, tint: [168, 74, 214] },
+    { kind: 0, speed: 72, hp: 18, radius: 20, damage: 8, xp: 2, tint: [232, 92, 86] },
+    { kind: 1, speed: 140, hp: 10, radius: 20, damage: 6, xp: 2, tint: [255, 164, 72] },
+    { kind: 2, speed: 42, hp: 70, radius: 24, damage: 14, xp: 5, tint: [168, 74, 214] },
 ];
 
 export class SpawnSystem implements System {
@@ -76,11 +78,12 @@ export class SpawnSystem implements System {
         world.add(entity, Enemy, enemy);
         world.add(entity, Position, makePosition(x, y));
         world.add(entity, Velocity, makeVelocity(Math.cos(angle + Math.PI) * spec.speed, Math.sin(angle + Math.PI) * spec.speed));
-        world.add(entity, Radius, makeRadius(elite ? spec.radius + 3 : spec.radius));
+        world.add(entity, Radius, makeRadius(elite ? spec.radius + 8 : spec.radius));
         world.add(entity, Health, makeHealth(hp));
         world.add(entity, Tint, elite
             ? makeTint(255, 208, 72)
             : makeTint(spec.tint[0], spec.tint[1], spec.tint[2]));
+        world.add(entity, Caption, makeCaption(elite ? '精英怪' : '普通怪'));
         if (elite) {
             world.add(entity, Elite);
         }
