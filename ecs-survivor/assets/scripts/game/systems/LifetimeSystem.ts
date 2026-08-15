@@ -2,6 +2,7 @@ import { System, World } from '../../ecs/World';
 import { Lifetime } from '../Components';
 import { GameContext } from '../GameConfig';
 
+/** 倒计时组件。remaining 归零就 destroy，目前主要给子弹用。 */
 export class LifetimeSystem implements System {
     name = 'Lifetime';
 

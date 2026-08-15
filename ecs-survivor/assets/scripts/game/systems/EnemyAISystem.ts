@@ -20,7 +20,7 @@ export class EnemyAISystem implements System {
             const dx = playerPos.x - position.x;
             const dy = playerPos.y - position.y;
             const len = Math.hypot(dx, dy) || 1;
-            const speed = Math.hypot(velocity.x, velocity.y) || 70;
+            const speed = Math.hypot(velocity.x, velocity.y) || 70; // 刷怪时写入的速率，这里只改方向
             velocity.x = (dx / len) * speed;
             velocity.y = (dy / len) * speed;
         });

@@ -26,9 +26,10 @@ export class MagnetSystem implements System {
             const dy = origin.y - pos.y;
             const dist = Math.hypot(dx, dy);
             if (dist > range || dist < 0.001) {
-                return;
+                return; // 0.001：已经叠在主角身上就别再除零改速度
             }
-            const speed = 220 + (1 - dist / range) * 260;
+            const speed = 220 + (1 - dist / range) * 260; // 越近吸得越快
+            // 球平时没 Velocity；一进磁力范围才挂上，之后 MovementSystem 会带着飞。
             const velocity = world.get(entity, Velocity) ?? world.add(entity, Velocity, makeVelocity(0, 0));
             velocity.x = (dx / dist) * speed;
             velocity.y = (dy / dist) * speed;

@@ -17,16 +17,20 @@ import {
 } from '../Components';
 import { GameContext } from '../GameConfig';
 
-const KINDS = [
+const KINDS = [ // kind 对应 Enemy.kind：0 普通、1 快速、2 高血量
     { kind: 0, speed: 72, hp: 18, radius: 20, damage: 8, xp: 2, tint: [232, 92, 86] },
     { kind: 1, speed: 140, hp: 10, radius: 20, damage: 6, xp: 2, tint: [255, 164, 72] },
     { kind: 2, speed: 42, hp: 70, radius: 24, damage: 14, xp: 5, tint: [168, 74, 214] },
 ];
 
+/**
+ * 在主角周围圆环刷怪。实体进了 World 就会被 AI / 碰撞 / 渲染扫到，这里不挂 Node。
+ * 精英 = 普通怪再 add(Elite)，不是新子类。
+ */
 export class SpawnSystem implements System {
     name = 'Spawn';
 
-    private acc = 0;
+    private acc = 0; // 刷怪累加器：每满 1 就尝试生成一只
 
     constructor(private readonly ctx: GameContext) {}
 
@@ -35,9 +39,10 @@ export class SpawnSystem implements System {
             return;
         }
         this.ctx.time += dt;
-        this.ctx.config.spawnPerSecond = 8 + Math.floor(this.ctx.time / 10) * 2;
+        this.ctx.config.spawnPerSecond = 8 + Math.floor(this.ctx.time / 10) * 2; // 每 10 秒 +2
         this.ctx.config.enemyHpScale = 1 + this.ctx.time / 80;
 
+        // 不能「每帧刷一只」：帧率一变刷怪速度就变。累加 dt * 只/秒，满 1 才刷。
         this.acc += dt * this.ctx.config.spawnPerSecond;
         const playerPos = world.get(this.ctx.player, Position);
         if (!playerPos) {
@@ -59,12 +64,13 @@ export class SpawnSystem implements System {
     private spawn(world: World, px: number, py: number): void {
         const late = this.ctx.time > 30;
         const roll = Math.random();
+        // 30 秒后提高快速怪 / 高血量怪的比例，表本身不变。
         const spec = late
             ? (roll < 0.55 ? KINDS[0] : roll < 0.8 ? KINDS[1] : KINDS[2])
             : (roll < 0.78 ? KINDS[0] : roll < 0.93 ? KINDS[1] : KINDS[2]);
 
         const angle = Math.random() * Math.PI * 2;
-        const dist = 430 + Math.random() * 80;
+        const dist = 430 + Math.random() * 80; // 主角周围 430–510，部分会在屏外
         const x = px + Math.cos(angle) * dist;
         const y = py + Math.sin(angle) * dist;
         const elite = Math.random() < 0.08;
@@ -77,6 +83,7 @@ export class SpawnSystem implements System {
         enemy.kind = spec.kind;
         world.add(entity, Enemy, enemy);
         world.add(entity, Position, makePosition(x, y));
+        // 刷在圆环上，初速朝圆心（主角）：生成角 + π 就是朝内。
         world.add(entity, Velocity, makeVelocity(Math.cos(angle + Math.PI) * spec.speed, Math.sin(angle + Math.PI) * spec.speed));
         world.add(entity, Radius, makeRadius(elite ? spec.radius + 8 : spec.radius));
         world.add(entity, Health, makeHealth(hp));
@@ -85,7 +92,7 @@ export class SpawnSystem implements System {
             : makeTint(spec.tint[0], spec.tint[1], spec.tint[2]));
         world.add(entity, Caption, makeCaption(elite ? '精英怪' : '普通怪'));
         if (elite) {
-            world.add(entity, Elite);
+            world.add(entity, Elite); // 标记组件，无字段
         }
     }
 }

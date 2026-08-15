@@ -32,6 +32,10 @@ import { XpSystem } from './systems/XpSystem';
 
 const { ccclass, property } = _decorator;
 
+/**
+ * Cocos 入口：建画布、注册 System、每帧驱动 World。
+ * 系统顺序：输入 → 移动 → AI → 武器 → 碰撞 → 战斗 → 寿命 → 刷怪 → 磁铁 → 经验 → 渲染 → HUD。
+ */
 @ccclass('GameApp')
 export class GameApp extends Component {
     @property({ tooltip: '开局敌人上限，运行中按 1-4 切换 2000/5000/10000/20000' })
@@ -49,18 +53,18 @@ export class GameApp extends Component {
         this.inputSystem = new InputSystem(this.ctx);
         this.spawnSystem = new SpawnSystem(this.ctx);
         this.world
-            .register(this.inputSystem)
-            .register(new MovementSystem(this.ctx))
-            .register(new EnemyAISystem(this.ctx))
-            .register(new WeaponSystem(this.ctx))
-            .register(new CollisionSystem(this.ctx))
-            .register(new CombatSystem(this.ctx))
-            .register(new LifetimeSystem(this.ctx))
-            .register(this.spawnSystem)
-            .register(new MagnetSystem(this.ctx))
-            .register(new XpSystem(this.ctx))
-            .register(new RenderSystem(this.ctx))
-            .register(new HudSystem(this.ctx));
+            .register(this.inputSystem)                 // WASD / 鼠标 → 主角速度
+            .register(new MovementSystem(this.ctx))     // Position += Velocity * dt
+            .register(new EnemyAISystem(this.ctx))      // 怪朝主角走
+            .register(new WeaponSystem(this.ctx))       // 冷却到了就生成子弹
+            .register(new CollisionSystem(this.ctx))    // 写出 damages / pickups
+            .register(new CombatSystem(this.ctx))       // 扣血、击杀掉落
+            .register(new LifetimeSystem(this.ctx))     // 子弹超时消失
+            .register(this.spawnSystem)                 // 在主角周围刷怪
+            .register(new MagnetSystem(this.ctx))       // 经验球吸向主角
+            .register(new XpSystem(this.ctx))           // 拾取升级
+            .register(new RenderSystem(this.ctx))       // 画圆 + 标签
+            .register(new HudSystem(this.ctx));         // 叠字
         this.startRun();
         this.started = true;
     }
@@ -77,6 +81,7 @@ export class GameApp extends Component {
         this.applySessionCommands();
     }
 
+    /** 清空 World，重新生成主角。R 重开走这里。 */
     private startRun(): void {
         this.world.reset();
         this.spawnSystem?.reset();
@@ -85,6 +90,7 @@ export class GameApp extends Component {
         this.ctx.player = this.spawnPlayer();
     }
 
+    /** 主角 = Player + Weapon + 位置/血量/颜色。行为不写在节点上。 */
     private spawnPlayer(): number {
         const entity = this.world.create();
         this.world.add(entity, Player);
@@ -98,6 +104,7 @@ export class GameApp extends Component {
         return entity;
     }
 
+    /** 消费本帧一次性按键：切碰撞、静音、敌人上限、暂停、重开。 */
     private applySessionCommands(): void {
         const input = this.ctx.input;
         if (input.toggleHash) {
@@ -126,6 +133,7 @@ export class GameApp extends Component {
         }
     }
 
+    /** 三个子节点：WorldDraw 画圆、EntityLabels 圆内字、HUD 叠信息。 */
     private buildView(): void {
         const worldNode = this.ensureChild('WorldDraw');
         const worldTransform = worldNode.getComponent(UITransform) ?? worldNode.addComponent(UITransform);

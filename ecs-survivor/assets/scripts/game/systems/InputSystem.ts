@@ -3,6 +3,10 @@ import { System, World } from '../../ecs/World';
 import { Player, Velocity } from '../Components';
 import { ENEMY_CAP_PRESETS, GameContext } from '../GameConfig';
 
+/**
+ * 把键盘/鼠标写成 InputState，并直接改主角 Velocity。
+ * 一次性按键用 latch：本帧读走后清掉，避免按住空格连触发。
+ */
 export class InputSystem implements System {
     name = 'Input';
 
@@ -41,18 +45,18 @@ export class InputSystem implements System {
         if (this.keys.has(KeyCode.KEY_S) || this.keys.has(KeyCode.ARROW_DOWN)) y -= 1;
         if (this.keys.has(KeyCode.KEY_W) || this.keys.has(KeyCode.ARROW_UP)) y += 1;
 
-        if (this.pointerDown) {
+        if (this.pointerDown) { // 按住左键：朝指针方向走，覆盖 WASD
             const dx = this.pointerX - this.ctx.viewW * 0.5;
             const dy = this.pointerY - this.ctx.viewH * 0.5;
             const len = Math.hypot(dx, dy);
-            if (len > 8) {
+            if (len > 8) { // 死区：点太靠近屏幕中心（主角）时不转向，避免抖动
                 x = dx / len;
                 y = dy / len;
             }
         }
 
         const len = Math.hypot(x, y);
-        state.x = len > 0 ? x / len : 0;
+        state.x = len > 0 ? x / len : 0; // WASD 斜走时 x=y=1，不归一化会快 √2 倍
         state.y = len > 0 ? y / len : 0;
         state.restart = this.restartLatch;
         state.togglePause = this.pauseLatch;
@@ -63,7 +67,7 @@ export class InputSystem implements System {
         this.pauseLatch = false;
         this.hashLatch = false;
         this.muteLatch = false;
-        this.capLatch = -1;
+        this.capLatch = -1; // 一次性标志本帧消费完就清
 
         const player = _world.get(this.ctx.player, Player);
         const velocity = _world.get(this.ctx.player, Velocity);
@@ -83,7 +87,7 @@ export class InputSystem implements System {
         if (event.keyCode === KeyCode.SPACE) this.pauseLatch = true;
         if (event.keyCode === KeyCode.KEY_C) this.hashLatch = true;
         if (event.keyCode === KeyCode.KEY_M) this.muteLatch = true;
-        const preset = event.keyCode - KeyCode.DIGIT_1;
+        const preset = event.keyCode - KeyCode.DIGIT_1; // Digit1..4 是连续枚举，减 Digit1 得到 0..3
         if (preset >= 0 && preset < ENEMY_CAP_PRESETS.length) {
             this.capLatch = preset;
         }

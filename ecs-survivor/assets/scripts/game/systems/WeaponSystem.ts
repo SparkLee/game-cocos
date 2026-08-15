@@ -43,12 +43,13 @@ export class WeaponSystem implements System {
 
         const aim = findNearestEnemy(world, origin.x, origin.y, weapon.range);
         if (!aim) {
-            return;
+            return; // 故意不把 timer 拉回 cooldown：附近一有怪就会马上打
         }
         weapon.timer = weapon.cooldown;
 
         const base = Math.atan2(aim.y - origin.y, aim.x - origin.x);
         const count = weapon.count;
+        // 例：3 发、spread=0.18 → 从 base-0.18 到 base+0.18，瞄准方向在正中。
         const start = count === 1 ? base : base - weapon.spread * (count - 1) * 0.5;
         for (let i = 0; i < count; i++) {
             const angle = start + weapon.spread * i;
@@ -60,7 +61,7 @@ export class WeaponSystem implements System {
 
 function findNearestEnemy(world: World, x: number, y: number, range: number): Position | null {
     let best: Position | null = null;
-    let bestDist = range * range;
+    let bestDist = range * range; // 全程用距离平方比，少一次开方
     world.each(Enemy, Position, (_entity, _enemy, position) => {
         const dx = position.x - x;
         const dy = position.y - y;
@@ -77,7 +78,7 @@ function spawnBullet(world: World, x: number, y: number, angle: number, weapon: 
     const entity = world.create();
     const projectile = new Projectile();
     projectile.damage = weapon.damage;
-    projectile.pierce = weapon.count >= 6 ? 1 : 0;
+    projectile.pierce = weapon.count >= 6 ? 1 : 0; // 弹道叠到 6 才给 1 次穿透，开局 2 发仍是碰一下就没
     world.add(entity, Projectile, projectile);
     world.add(entity, Position, makePosition(x, y));
     world.add(entity, Velocity, makeVelocity(Math.cos(angle) * weapon.speed, Math.sin(angle) * weapon.speed));

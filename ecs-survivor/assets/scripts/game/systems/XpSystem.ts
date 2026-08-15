@@ -15,7 +15,7 @@ export class XpSystem implements System {
 
     update(world: World): void {
         if (this.ctx.paused && !this.ctx.dead) {
-            return;
+            return; // 死亡后 paused 也为 true，但仍要把本帧已捡的球结算掉
         }
         const pickups = this.ctx.events.pickups;
         for (let i = 0; i < pickups.length; i++) {
@@ -24,9 +24,9 @@ export class XpSystem implements System {
                 continue;
             }
             this.ctx.xp += pickup.amount;
-            world.destroy(pickup.entity);
+            world.destroy(pickup.entity); // 球捡走就销毁，不是藏起来
             this.ctx.sfx.play('pickup');
-            while (this.ctx.xp >= this.ctx.xpToNext) {
+            while (this.ctx.xp >= this.ctx.xpToNext) { // 一颗大经验可能连升几级
                 this.ctx.xp -= this.ctx.xpToNext;
                 this.ctx.level += 1;
                 this.ctx.xpToNext = xpNeeded(this.ctx.level);
@@ -44,7 +44,7 @@ export class XpSystem implements System {
         weapon.damage += 20;
         weapon.cooldown = Math.max(0.12, weapon.cooldown * 0.92);
         if (this.ctx.level % 2 === 0) {
-            weapon.count = Math.min(8, weapon.count + 1);
+            weapon.count = Math.min(8, weapon.count + 1); // 偶数级加一条弹道，最多 8
         }
     }
 }

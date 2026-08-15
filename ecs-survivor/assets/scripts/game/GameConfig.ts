@@ -5,23 +5,26 @@ import { Sfx } from './Sfx';
 export const VIEW_W = 1280;
 export const VIEW_H = 720;
 
+/** 本局可调参数。敌人上限运行中按 1–4 切换。 */
 export class GameConfig {
-    maxEnemies = 5000;
-    useSpatialHash = true;
-    spawnPerSecond = 8;
-    enemyHpScale = 1;
+    maxEnemies = 5000;         // 同时存在的敌人上限
+    useSpatialHash = true;     // true：空间哈希；false：全对全 O(n²)
+    spawnPerSecond = 8;        // 每秒尝试刷几只怪，随时间在 SpawnSystem 里上涨
+    enemyHpScale = 1;          // 敌人血量随时间放大的倍率
 }
 
+/** 本帧输入快照。InputSystem 写入，GameApp / 其它系统读取。 */
 export class InputState {
-    x = 0;
-    y = 0;
+    x = 0;                     // 水平方向，-1..1
+    y = 0;                     // 垂直方向，-1..1
     restart = false;
     togglePause = false;
     toggleHash = false;
     toggleMute = false;
-    capPreset = -1;
+    capPreset = -1;            // 1–4 对应 ENEMY_CAP_PRESETS 下标，-1 表示没按
 }
 
+/** 本帧碰撞结果。CollisionSystem 写入，Combat / XP 消费后 clear。 */
 export class GameEvents {
     damages: { target: Entity; amount: number; source: Entity }[] = [];
     pickups: { entity: Entity; amount: number }[] = [];
@@ -32,14 +35,16 @@ export class GameEvents {
     }
 }
 
+/** HUD 五块 Label 的引用，文字由 HudSystem 填。 */
 export class HudView {
-    stats: Label | null = null;
-    systems: Label | null = null;
-    help: Label | null = null;
-    hint: Label | null = null;
-    banner: Label | null = null;
+    stats: Label | null = null;     // 左上：状态
+    systems: Label | null = null;   // 右上：耗时
+    help: Label | null = null;      // 左下：说明
+    hint: Label | null = null;      // 底部：按键
+    banner: Label | null = null;    // 正中：暂停 / 死亡
 }
 
+/** 一局游戏的共享状态。System 之间不互相引用，都读这份上下文。 */
 export class GameContext {
     readonly input = new InputState();
     readonly events = new GameEvents();
@@ -47,8 +52,8 @@ export class GameContext {
     readonly hud = new HudView();
     readonly sfx = new Sfx();
 
-    graphics: Graphics | null = null;
-    labelRoot: Node | null = null;
+    graphics: Graphics | null = null;  // 世界圆圈画在这上面
+    labelRoot: Node | null = null;     // 圆圈内文字 Label 的父节点
     player: Entity = 0;
     paused = false;
     dead = false;
@@ -57,7 +62,7 @@ export class GameContext {
     level = 1;
     xp = 0;
     xpToNext = 12;
-    shake = 0;
+    shake = 0;                         // 受击镜头抖动，RenderSystem 每帧衰减
     viewW = VIEW_W;
     viewH = VIEW_H;
 
@@ -76,8 +81,9 @@ export class GameContext {
     }
 }
 
-export const ENEMY_CAP_PRESETS = [2000, 5000, 10000, 20000];
+export const ENEMY_CAP_PRESETS = [2000, 5000, 10000, 20000]; // 按键 1–4
 
 export function xpNeeded(level: number): number {
+    // 线性项 + 平方项：越往后每一级要的 XP 涨得越快。
     return Math.floor(12 + (level - 1) * 10 + (level - 1) * (level - 1) * 1.6);
 }

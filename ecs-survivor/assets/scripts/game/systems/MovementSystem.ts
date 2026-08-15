@@ -2,6 +2,7 @@ import { System, World } from '../../ecs/World';
 import { Position, Velocity } from '../Components';
 import { GameContext } from '../GameConfig';
 
+/** 所有带 Position + Velocity 的实体：位置 += 速度 × dt。主角、怪、子弹、被吸的经验球都走这里。 */
 export class MovementSystem implements System {
     name = 'Movement';
 

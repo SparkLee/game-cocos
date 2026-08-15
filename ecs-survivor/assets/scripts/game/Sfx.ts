@@ -21,12 +21,13 @@ interface ToneSpec {
 }
 
 export class Sfx {
-    muted = false;
+    muted = false; // M 键切换；静音后 play 直接返回
 
     private audio: AudioContext | null = null;
     private master: GainNode | null = null;
-    private readonly lastAt: Record<string, number> = {};
+    private readonly lastAt: Record<string, number> = {}; // 每种音效上次播放时间，用来节流
 
+    /** 浏览器要求用户手势后才能出声，按键/点击时调一次。 */
     unlock(): void {
         const ctx = this.ensure();
         if (ctx && ctx.state === 'suspended') {
@@ -44,7 +45,7 @@ export class Sfx {
         }
         if (ctx.state === 'suspended') {
             void ctx.resume();
-            return;
+            return; // resume 是异步的，这一帧先不出声，等下次 play
         }
         const minGap = GAP[kind];
         const now = ctx.currentTime;
@@ -55,6 +56,7 @@ export class Sfx {
         PLAY[kind](this, now);
     }
 
+    /** 合成一段短促振荡。freqEnd 有值时做下滑音。 */
     tone(when: number, spec: ToneSpec): void {
         const ctx = this.audio;
         const master = this.master;
@@ -70,6 +72,7 @@ export class Sfx {
             osc.frequency.exponentialRampToValueAtTime(Math.max(40, spec.freqEnd), start + spec.duration);
         }
         const peak = spec.gain ?? 0.12;
+        // exponentialRamp 不能从 0 开始（log(0) 无效），所以用 0.0001 当静音底。
         gain.gain.setValueAtTime(0.0001, start);
         gain.gain.exponentialRampToValueAtTime(peak, start + 0.008);
         gain.gain.exponentialRampToValueAtTime(0.0001, start + spec.duration);
@@ -79,6 +82,7 @@ export class Sfx {
         osc.stop(start + spec.duration + 0.02);
     }
 
+    /** 白噪声短促一截，给命中/击杀加「沙沙」质感。 */
     noise(when: number, duration: number, gainValue: number, highpass = 800): void {
         const ctx = this.audio;
         const master = this.master;
@@ -122,7 +126,7 @@ export class Sfx {
     }
 }
 
-const GAP: Record<SfxKind, number> = {
+const GAP: Record<SfxKind, number> = { // 同类音效最短间隔（秒），避免刷怪时音墙
     shoot: 0.05,
     hit: 0.04,
     kill: 0.06,

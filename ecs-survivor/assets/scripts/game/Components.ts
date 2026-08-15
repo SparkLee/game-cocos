@@ -6,20 +6,24 @@
  * 系统只关心自己需要的那几列数据。
  */
 
+/** 世界坐标，原点在画面中心。 */
 export class Position {
     x = 0;
     y = 0;
 }
 
+/** 速度，单位：世界坐标 / 秒。MovementSystem 每帧把速度加到 Position。 */
 export class Velocity {
     x = 0;
     y = 0;
 }
 
+/** 碰撞圆半径。子弹、敌人、主角、经验球都用圆对圆。 */
 export class Radius {
     value = 12;
 }
 
+/** 生命值。current 归零时 CombatSystem 会 kill。 */
 export class Health {
     current = 1;
     max = 1;
@@ -50,15 +54,8 @@ export class Elite {}
  * 本组件只存伤害和穿透次数，位置与速度由 Position / Velocity 提供。
  */
 export class Projectile {
-    damage = 120;
-    /**
-     * pierce = 穿透次数。
-     *
-     * 子弹打中一个敌人后还剩几次可以继续飞。
-     * 0 表示碰到第一个敌人就消失；1 表示能再穿过去打第二个。
-     * CollisionSystem 每命中一次就减 1，减到小于 0 时销毁这颗子弹。
-     */
-    pierce = 0;
+    damage = 120;          // 打中敌人时扣的血
+    pierce = 0;            // 剩余可穿透次数。0=碰一下就没；命中后先减 1，<0 才销毁（见 CollisionSystem）
 }
 
 /**
@@ -81,7 +78,7 @@ export class Weapon {
 
 /** Experience = 经验。挂在经验球上，amount 是捡到后增加的 XP（Experience Points，经验值）。 */
 export class Experience {
-    amount = 2;
+    amount = 2;            // 捡到后增加的 XP
 }
 
 /**
@@ -93,6 +90,7 @@ export class Experience {
  */
 export class Magnet {}
 
+/** 剩余寿命（秒）。子弹飞一段时间后由 LifetimeSystem 销毁。 */
 export class Lifetime {
     remaining = 1;
 }
