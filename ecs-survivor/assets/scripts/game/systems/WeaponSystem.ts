@@ -36,18 +36,22 @@ export class WeaponSystem implements System {
         if (!weapon || !origin) {
             return;
         }
+
+        const aim = findNearestEnemy(world, origin.x, origin.y, weapon.range);
+        if (aim) {
+            weapon.aimAngle = Math.atan2(aim.y - origin.y, aim.x - origin.x);
+        }
+
         weapon.timer -= dt;
         if (weapon.timer > 0) {
             return;
         }
-
-        const aim = findNearestEnemy(world, origin.x, origin.y, weapon.range);
         if (!aim) {
             return; // 故意不把 timer 拉回 cooldown：附近一有怪就会马上打
         }
         weapon.timer = weapon.cooldown;
 
-        const base = Math.atan2(aim.y - origin.y, aim.x - origin.x);
+        const base = weapon.aimAngle;
         const count = weapon.count;
         // 例：3 发、spread=0.18 → 从 base-0.18 到 base+0.18，瞄准方向在正中。
         const start = count === 1 ? base : base - weapon.spread * (count - 1) * 0.5;

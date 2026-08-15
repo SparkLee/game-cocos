@@ -52,8 +52,11 @@ export class GameContext {
     readonly hud = new HudView();
     readonly sfx = new Sfx();
 
-    graphics: Graphics | null = null;  // 世界圆圈画在这上面
-    labelRoot: Node | null = null;     // 圆圈内文字 Label 的父节点
+    graphics: Graphics | null = null;  // 只画地面网格
+    entityRoot: Node | null = null;    // 实体节点的父节点，跟主角反向平移当相机
+    enemiesRoot: Node | null = null;
+    bulletsRoot: Node | null = null;
+    expOrbsRoot: Node | null = null;
     player: Entity = 0;
     paused = false;
     dead = false;

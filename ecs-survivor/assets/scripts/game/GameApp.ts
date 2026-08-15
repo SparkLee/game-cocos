@@ -45,6 +45,7 @@ export class GameApp extends Component {
     private readonly world = new World();
     private inputSystem: InputSystem | null = null;
     private spawnSystem: SpawnSystem | null = null;
+    private renderSystem: RenderSystem | null = null;
     private started = false;
 
     onLoad(): void {
@@ -52,6 +53,7 @@ export class GameApp extends Component {
         this.buildView();
         this.inputSystem = new InputSystem(this.ctx);
         this.spawnSystem = new SpawnSystem(this.ctx);
+        this.renderSystem = new RenderSystem(this.ctx);
         this.world
             .register(this.inputSystem)                 // WASD / 鼠标 → 主角速度
             .register(new MovementSystem(this.ctx))     // Position += Velocity * dt
@@ -63,7 +65,7 @@ export class GameApp extends Component {
             .register(this.spawnSystem)                 // 在主角周围刷怪
             .register(new MagnetSystem(this.ctx))       // 经验球吸向主角
             .register(new XpSystem(this.ctx))           // 拾取升级
-            .register(new RenderSystem(this.ctx))       // 画圆 + 标签
+            .register(this.renderSystem)                // ECS 数据 → 真实 Node
             .register(new HudSystem(this.ctx));         // 叠字
         this.startRun();
         this.started = true;
@@ -83,6 +85,7 @@ export class GameApp extends Component {
 
     /** 清空 World，重新生成主角。R 重开走这里。 */
     private startRun(): void {
+        this.renderSystem?.reset();
         this.world.reset();
         this.spawnSystem?.reset();
         this.ctx.resetRun();
@@ -133,7 +136,7 @@ export class GameApp extends Component {
         }
     }
 
-    /** 三个子节点：WorldDraw 画圆、EntityLabels 圆内字、HUD 叠信息。 */
+    /** 网格、实体根节点（含敌人/子弹/经验球分组）、HUD。 */
     private buildView(): void {
         const worldNode = this.ensureChild('WorldDraw');
         const worldTransform = worldNode.getComponent(UITransform) ?? worldNode.addComponent(UITransform);
@@ -141,11 +144,23 @@ export class GameApp extends Component {
         worldTransform.setAnchorPoint(0.5, 0.5);
         this.ctx.graphics = worldNode.getComponent(Graphics) ?? worldNode.addComponent(Graphics);
 
-        const labels = this.ensureChild('EntityLabels');
-        const labelsTransform = labels.getComponent(UITransform) ?? labels.addComponent(UITransform);
-        labelsTransform.setContentSize(this.ctx.viewW, this.ctx.viewH);
-        labelsTransform.setAnchorPoint(0.5, 0.5);
-        this.ctx.labelRoot = labels;
+        const entities = this.ensureChild('Entities');
+        const entitiesTransform = entities.getComponent(UITransform) ?? entities.addComponent(UITransform);
+        entitiesTransform.setContentSize(this.ctx.viewW, this.ctx.viewH);
+        entitiesTransform.setAnchorPoint(0.5, 0.5);
+        this.ctx.entityRoot = entities;
+        this.ctx.enemiesRoot = this.ensureNamed(entities, 'Enemies');
+        this.ctx.bulletsRoot = this.ensureNamed(entities, 'Bullets');
+        this.ctx.expOrbsRoot = this.ensureNamed(entities, 'ExpOrbs');
+
+        const leftoverLabels = this.node.getChildByName('EntityLabels');
+        if (leftoverLabels) {
+            leftoverLabels.destroy();
+        }
+        const leftoverGems = entities.getChildByName('Gems');
+        if (leftoverGems) {
+            leftoverGems.destroy();
+        }
 
         const hud = this.ensureChild('HUD');
         const hudTransform = hud.getComponent(UITransform) ?? hud.addComponent(UITransform);
@@ -155,6 +170,7 @@ export class GameApp extends Component {
         this.ctx.hud.help = this.makeLabel(hud, 'Help', -this.ctx.viewW * 0.5 + 24, 70, 620, 140, 16, new Color(139, 155, 180), Label.HorizontalAlign.LEFT, 0, 1);
         this.ctx.hud.hint = this.makeLabel(hud, 'Hint', 0, -this.ctx.viewH * 0.5 + 28, this.ctx.viewW - 40, 36, 16, new Color(106, 118, 136), Label.HorizontalAlign.CENTER, 0.5, 0.5);
         this.ctx.hud.banner = this.makeLabel(hud, 'Banner', 0, 36, 720, 64, 36, new Color(255, 220, 140), Label.HorizontalAlign.CENTER, 0.5, 0.5);
+        hud.setSiblingIndex(this.node.children.length - 1);
     }
 
     private ensureChild(name: string): Node {
@@ -164,6 +180,19 @@ export class GameApp extends Component {
             child.layer = this.node.layer;
             this.node.addChild(child);
         }
+        return child;
+    }
+
+    private ensureNamed(parent: Node, name: string): Node {
+        let child = parent.getChildByName(name);
+        if (!child) {
+            child = new Node(name);
+            child.layer = parent.layer;
+            parent.addChild(child);
+        }
+        const transform = child.getComponent(UITransform) ?? child.addComponent(UITransform);
+        transform.setAnchorPoint(0.5, 0.5);
+        transform.setContentSize(this.ctx.viewW, this.ctx.viewH);
         return child;
     }
 

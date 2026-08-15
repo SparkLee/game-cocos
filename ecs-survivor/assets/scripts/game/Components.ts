@@ -6,6 +6,8 @@
  * 系统只关心自己需要的那几列数据。
  */
 
+import { Node } from 'cc';
+
 /** 世界坐标，原点在画面中心。 */
 export class Position {
     x = 0;
@@ -74,6 +76,7 @@ export class Weapon {
     speed = 540;       // 子弹飞行速度（世界坐标 / 秒）
     range = 520;       // 自动瞄准的最远距离
     spread = 0.18;     // 多弹道时的夹角（弧度）
+    aimAngle = 0;      // 当前瞄准角（弧度），RenderSystem 用来转武器节点
 }
 
 /** Experience = 经验。挂在经验球上，amount 是捡到后增加的 XP（Experience Points，经验值）。 */
@@ -111,6 +114,14 @@ export class HitFlash {
 /** 画在圆圈里的短标签，例如「主角」「普通怪」。 */
 export class Caption {
     text = '';
+}
+
+/**
+ * 表现节点。实体仍然只是 ID；RenderSystem 给它绑一个 Cocos Node。
+ * 以后换 Spine：挂到子节点 Body 上，占位 Graphics 可以去掉。
+ */
+export class View {
+    node: Node | null = null;
 }
 
 export function makeCaption(text: string): Caption {

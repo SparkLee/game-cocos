@@ -57,7 +57,7 @@ export class HudSystem implements System {
                 '1. 海量同类实体：移动 / AI / 渲染各扫一遍数组',
                 '2. 组合优于继承：加 Elite 组件就是精英怪',
                 '3. 碰撞可批处理：空间哈希挂在 CollisionSystem',
-                '4. 逻辑与节点分离：实体只是 ID + 数据，不是 Node',
+                '4. 逻辑在 ECS，画面是 Node：Body 上以后可换 Spine',
             ].join('\n');
         }
 

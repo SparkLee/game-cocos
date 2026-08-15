@@ -46,8 +46,8 @@
    普通怪、精英怪、经验球没有继承树。精英 = 普通敌人再 `add(Elite)`。`RenderSystem` 看到 `Elite` 就画金边，`CombatSystem` 看到就掉更多经验。
 3. **碰撞必须批处理**  
    割草最贵的是「子弹 × 敌人」。按 `C` 可对比空间哈希和全对全，右上角 `Collision` 耗时会拉开。实体越多，差距越明显。
-4. **逻辑和场景树脱钩**  
-   实体不是节点。`RenderSystem` 用一个 `Graphics` 按数据批量画圆，避免为每个敌人挂 `Node`。
+4. **逻辑在 ECS，画面是 Node**  
+   实体仍然只是 ID + 数据，`update()` 不写在节点上。`RenderSystem` 给每个主角 / 敌人 / 子弹 / 经验球绑一棵 Cocos 节点（`Body` 上以后可挂 Spine）。网格仍用一个 `Graphics` 画。
 
 ## 建议对照实验
 
@@ -66,6 +66,7 @@ ecs-survivor/
         ├── Components.ts             # 纯数据组件
         ├── GameConfig.ts             # 运行时上下文、HUD、输入
         ├── SpatialHash.ts            # 均匀网格空间哈希
+        ├── EntityView.ts             # 实体节点树（Body / Visual / Weapon）
         ├── GameApp.ts                # 启动、建视图、注册系统
         └── systems/                  # 一系统只做一件事
 ```

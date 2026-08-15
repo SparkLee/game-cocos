@@ -81,15 +81,15 @@ export class CombatSystem implements System {
         const enemy = world.get(entity, Enemy);
         const pos = world.get(entity, Position);
         if (enemy && pos) {
-            const gem = world.create(); // 新实体，不是复用这只怪
+            const expOrb = world.create(); // 新实体，不是复用这只怪
             const exp = new Experience();
             exp.amount = world.has(entity, Elite) ? enemy.xp * 3 : enemy.xp; // 精英怪经验 ×3
-            world.add(gem, Experience, exp);
-            world.add(gem, Magnet); // 可被主角磁力吸附
-            world.add(gem, Position, makePosition(pos.x, pos.y)); // 出现在怪的死亡坐标
-            world.add(gem, Radius, makeRadius(16));
-            world.add(gem, Tint, makeTint(120, 230, 140));
-            world.add(gem, Caption, makeCaption('经验球'));
+            world.add(expOrb, Experience, exp);
+            world.add(expOrb, Magnet); // 可被主角磁力吸附
+            world.add(expOrb, Position, makePosition(pos.x, pos.y)); // 出现在怪的死亡坐标
+            world.add(expOrb, Radius, makeRadius(16));
+            world.add(expOrb, Tint, makeTint(120, 230, 140));
+            world.add(expOrb, Caption, makeCaption('经验球'));
             this.ctx.kills += 1;
             this.ctx.sfx.play('kill');
         }

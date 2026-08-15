@@ -34,7 +34,7 @@ export class CollisionSystem implements System {
         });
         this.hitProjectiles(world, (x, y, range, out) => this.hash.query(x, y, range, out));
         this.hitPlayer(world, (x, y, range, out) => this.hash.query(x, y, range, out));
-        this.hitGems(world);
+        this.hitExpOrbs(world);
     }
 
     private resolveBrute(world: World): void { // 每颗子弹对所有敌人，O(子弹×敌人)
@@ -55,7 +55,7 @@ export class CollisionSystem implements System {
             }
             return out;
         });
-        this.hitGems(world);
+        this.hitExpOrbs(world);
     }
 
     /** 子弹 vs 敌人：命中写入 damages，并扣 pierce。 */
@@ -112,7 +112,7 @@ export class CollisionSystem implements System {
     }
 
     /** 经验球进入 pickupRadius 则写入 pickups，真正加 XP 在 XpSystem。 */
-    private hitGems(world: World): void {
+    private hitExpOrbs(world: World): void {
         const player = this.ctx.player;
         const playerComp = world.get(player, Player);
         const playerPos = world.get(player, Position);

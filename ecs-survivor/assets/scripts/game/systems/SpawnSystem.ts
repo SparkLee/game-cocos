@@ -24,7 +24,7 @@ const KINDS = [ // kind 对应 Enemy.kind：0 普通、1 快速、2 高血量
 ];
 
 /**
- * 在主角周围圆环刷怪。实体进了 World 就会被 AI / 碰撞 / 渲染扫到，这里不挂 Node。
+ * 在主角周围圆环刷怪。实体进了 World 后，RenderSystem 会给它绑一棵 Node。
  * 精英 = 普通怪再 add(Elite)，不是新子类。
  */
 export class SpawnSystem implements System {

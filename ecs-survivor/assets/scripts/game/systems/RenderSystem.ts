@@ -1,54 +1,192 @@
-import { Color, Graphics, Label, Node, UITransform } from 'cc';
-import { System, World } from '../../ecs/World';
-import { Caption, Elite, Enemy, Experience, HitFlash, Position, Projectile, Radius, Tint } from '../Components';
+import { Color, Graphics, Node } from 'cc';
+import { Entity, System, World } from '../../ecs/World';
+import { Caption, Elite, Enemy, Experience, HitFlash, Position, Projectile, Radius, Tint, Velocity, View, Weapon } from '../Components';
+import { createEntityNode, EntityBinding, EntityKind, paintPlaceholder } from '../EntityView';
 import { GameContext } from '../GameConfig';
 
 const GRID = new Color(36, 44, 58, 255);
-const PLAYER_CORE = new Color(90, 230, 210, 255);
 const FLASH = new Color(255, 255, 255, 255);
-const LABEL_FILL = new Color(255, 255, 255, 255);
-const LABEL_OUTLINE = new Color(20, 22, 28, 230);
+const PLAYER_CORE = new Color(90, 230, 210, 255);
 
 /**
- * 用一个 Graphics 按数据画圆，圆内文字来自 Label 对象池。
- * 相机跟主角：世界坐标减去主角位置，主角永远画在屏幕中心。
- * 屏外的怪 ECS 仍在模拟，这里裁掉不画。
+ * 把 ECS 数据同步到真实 Cocos 节点。
+ *
+ * 网格仍画在 WorldDraw 的 Graphics 上（不是实体）。
+ * 主角 / 怪 / 子弹 / 经验球各有一棵节点树：Body 上以后可挂 Spine。
+ * Visual 用同一张圆 Sprite 合批；Label 只给主角和精英，避免上千次 Draw Call。
+ * Entities 根节点反向跟着主角平移，当作 2D 相机。
  */
 export class RenderSystem implements System {
     name = 'Render';
 
-    private readonly pool: Label[] = []; // 标签对象池，不够再 new，多余的藏起来
-    private used = 0;
+    private readonly bound = new Map<Entity, EntityBinding>();
+    private readonly pool: Record<EntityKind, EntityBinding[]> = {
+        player: [],
+        enemy: [],
+        bullet: [],
+        expOrb: [],
+    };
 
     constructor(private readonly ctx: GameContext) {}
+
+    /** 重开前先回收节点。World.reset() 会丢掉 View 组件，但 Node 还在场景里。 */
+    reset(): void {
+        this.bound.forEach((binding) => this.recycle(binding));
+        this.bound.clear();
+    }
 
     update(world: World): void {
         const graphics = this.ctx.graphics;
         const origin = world.get(this.ctx.player, Position);
-        if (!graphics || !origin) {
+        const root = this.ctx.entityRoot;
+        if (!graphics || !origin || !root) {
             return;
         }
-        graphics.clear();
-        this.used = 0;
-        this.ctx.shake *= 0.82; // 每帧乘衰减，几帧后自然停，不必另做计时器
+
+        this.recycleDead(world);
+
+        this.ctx.shake *= 0.82;
         const ox = (Math.random() - 0.5) * this.ctx.shake;
         const oy = (Math.random() - 0.5) * this.ctx.shake;
+        // 实体保留世界坐标；根节点移到 (-主角 + 抖动)，主角就会停在屏幕中心。
+        root.setPosition(-origin.x + ox, -origin.y + oy, 0);
+
         this.drawGrid(graphics, origin.x, origin.y, ox, oy);
-        this.drawGroup(world, graphics, origin, ox, oy, Experience);
-        this.drawGroup(world, graphics, origin, ox, oy, Enemy);
-        this.drawGroup(world, graphics, origin, ox, oy, Projectile);
-        this.drawPlayer(world, graphics, origin, ox, oy);
-        this.hideSpare();
+        world.each(Experience, Position, Radius, Tint, (entity, _t, pos, radius, tint) => {
+            this.syncOne(world, origin, entity, 'expOrb', pos, radius, tint);
+        });
+        world.each(Enemy, Position, Radius, Tint, (entity, _t, pos, radius, tint) => {
+            this.syncOne(world, origin, entity, 'enemy', pos, radius, tint);
+        });
+        world.each(Projectile, Position, Radius, Tint, (entity, _t, pos, radius, tint) => {
+            this.syncOne(world, origin, entity, 'bullet', pos, radius, tint);
+        });
+        this.syncPlayer(world, origin);
+    }
+
+    private recycleDead(world: World): void {
+        const dead: Entity[] = [];
+        this.bound.forEach((binding, entity) => {
+            if (!world.isAlive(entity)) {
+                this.recycle(binding);
+                dead.push(entity);
+            }
+        });
+        for (let i = 0; i < dead.length; i++) {
+            this.bound.delete(dead[i]);
+        }
+    }
+
+    private recycle(binding: EntityBinding): void {
+        binding.node.active = false;
+        binding.paintedKey = '';
+        this.pool[binding.kind].push(binding);
+    }
+
+    private syncOne(
+        world: World,
+        origin: Position,
+        entity: Entity,
+        kind: EntityKind,
+        pos: Position,
+        radius: Radius,
+        tint: Tint,
+    ): void {
+        const hw = this.ctx.viewW * 0.5 + 40;
+        const hh = this.ctx.viewH * 0.5 + 40;
+        const binding = this.ensure(world, entity, kind);
+        const sx = pos.x - origin.x;
+        const sy = pos.y - origin.y;
+        const onScreen = sx > -hw && sx < hw && sy > -hh && sy < hh;
+        binding.node.active = onScreen;
+        binding.node.setPosition(pos.x, pos.y, 0);
+        if (!onScreen) {
+            return;
+        }
+        this.paintEntity(world, entity, binding, radius, tint);
+        this.faceVelocity(world, entity, binding);
+    }
+
+    private syncPlayer(world: World, origin: Position): void {
+        const entity = this.ctx.player;
+        const radius = world.get(entity, Radius);
+        const tint = world.get(entity, Tint);
+        if (!radius || !tint) {
+            return;
+        }
+        const binding = this.ensure(world, entity, 'player');
+        binding.node.active = true;
+        binding.node.setPosition(origin.x, origin.y, 0);
+        this.paintEntity(world, entity, binding, radius, tint, PLAYER_CORE);
+        const weapon = world.get(entity, Weapon);
+        const deg = ((weapon ? weapon.aimAngle : 0) * 180) / Math.PI;
+        binding.body.angle = deg;
+    }
+
+    private paintEntity(
+        world: World,
+        entity: Entity,
+        binding: EntityBinding,
+        radius: Radius,
+        tint: Tint,
+        fillOverride?: Color,
+    ): void {
+        const caption = world.get(entity, Caption);
+        const text = caption ? caption.text : '';
+        const flash = world.get(entity, HitFlash);
+        const flashing = !!(flash && flash.remaining > 0);
+        const fill = flashing ? FLASH : (fillOverride ?? colorFrom(tint));
+        paintPlaceholder(binding, radius.value, fill, world.has(entity, Elite), text);
+    }
+
+    private faceVelocity(world: World, entity: Entity, binding: EntityBinding): void {
+        const velocity = world.get(entity, Velocity);
+        if (!velocity) {
+            return;
+        }
+        if (velocity.x * velocity.x + velocity.y * velocity.y < 1) {
+            return;
+        }
+        binding.body.angle = (Math.atan2(velocity.y, velocity.x) * 180) / Math.PI;
+    }
+
+    private ensure(world: World, entity: Entity, kind: EntityKind): EntityBinding {
+        let binding = this.bound.get(entity);
+        if (binding) {
+            return binding;
+        }
+        const parent = this.parentOf(kind);
+        binding = this.pool[kind].pop() ?? createEntityNode(kind, parent ? parent.layer : 0);
+        if (parent && binding.node.parent !== parent) {
+            binding.node.parent = parent;
+        }
+        binding.node.active = true;
+        this.bound.set(entity, binding);
+        const view = world.get(entity, View) ?? world.add(entity, View);
+        view.node = binding.node;
+        return binding;
+    }
+
+    private parentOf(kind: EntityKind): Node | null {
+        if (kind === 'enemy') {
+            return this.ctx.enemiesRoot;
+        }
+        if (kind === 'bullet') {
+            return this.ctx.bulletsRoot;
+        }
+        if (kind === 'expOrb') {
+            return this.ctx.expOrbsRoot;
+        }
+        return this.ctx.entityRoot;
     }
 
     private drawGrid(graphics: Graphics, px: number, py: number, ox: number, oy: number): void {
         const step = 80;
         const hw = this.ctx.viewW * 0.5;
         const hh = this.ctx.viewH * 0.5;
+        graphics.clear();
         graphics.strokeColor = GRID;
         graphics.lineWidth = 1;
-        // 网格要跟着主角平移，但不能整格跳。先把世界坐标模到一格内，再从屏幕左边画出。
-        // ((n % step) + step) % step 是为了 n 为负时 JS 的 % 仍得到负数。
         const startX = -hw - ((px % step) + step) % step;
         const startY = -hh - ((py % step) + step) % step;
         for (let x = startX; x <= hw + step; x += step) {
@@ -61,114 +199,10 @@ export class RenderSystem implements System {
         }
         graphics.stroke();
     }
-
-    private drawGroup(
-        world: World,
-        graphics: Graphics,
-        origin: Position,
-        ox: number,
-        oy: number,
-        tag: typeof Enemy | typeof Projectile | typeof Experience,
-    ): void {
-        const hw = this.ctx.viewW * 0.5 + 30;
-        const hh = this.ctx.viewH * 0.5 + 30;
-        world.each(tag, Position, Radius, Tint, (_entity, _tag, pos, radius, tint) => {
-            // 世界坐标减主角位置 = 屏幕坐标。主角永远在 (0,0)，再加 ox/oy 做抖动。
-            const x = pos.x - origin.x + ox;
-            const y = pos.y - origin.y + oy;
-            if (x < -hw || x > hw || y < -hh || y > hh) {
-                return; // 屏外不画，实体还在 World 里
-            }
-            const flash = world.get(_entity, HitFlash);
-            if (flash && flash.remaining > 0) {
-                graphics.fillColor = FLASH;
-            } else {
-                graphics.fillColor = colorFrom(tint);
-            }
-            graphics.circle(x, y, radius.value);
-            graphics.fill();
-            if (world.has(_entity, Elite)) { // 精英金边，只看有没有 Elite 组件
-                graphics.strokeColor = FLASH;
-                graphics.lineWidth = 2;
-                graphics.circle(x, y, radius.value + 3);
-                graphics.stroke();
-            }
-            const caption = world.get(_entity, Caption);
-            if (caption) {
-                this.placeCaption(caption.text, x, y, radius.value);
-            }
-        });
-    }
-
-    private drawPlayer(world: World, graphics: Graphics, origin: Position, ox: number, oy: number): void {
-        const radius = world.get(this.ctx.player, Radius);
-        const flash = world.get(this.ctx.player, HitFlash);
-        const r = radius ? radius.value : 20;
-        graphics.fillColor = flash && flash.remaining > 0 ? FLASH : PLAYER_CORE;
-        graphics.circle(ox, oy, r); // 主角已是相机原点，只画抖动偏移
-        graphics.fill();
-        graphics.strokeColor = new Color(180, 255, 240, 180);
-        graphics.lineWidth = 2;
-        graphics.circle(ox, oy, r + 4);
-        graphics.stroke();
-        const caption = world.get(this.ctx.player, Caption);
-        this.placeCaption(caption ? caption.text : '主角', ox, oy, r);
-    }
-
-    private placeCaption(text: string, x: number, y: number, radius: number): void {
-        const root = this.ctx.labelRoot;
-        if (!root) {
-            return;
-        }
-        let label = this.pool[this.used];
-        if (!label) {
-            // 本帧需要的第 N 个标签池里还没有：才 new。之后一直复用，hideSpare 只是 active=false。
-            const node = new Node('Caption');
-            node.layer = root.layer;
-            const transform = node.addComponent(UITransform);
-            transform.setContentSize(88, 32);
-            transform.setAnchorPoint(0.5, 0.5);
-            label = node.addComponent(Label);
-            label.useSystemFont = true;
-            label.fontFamily = 'Microsoft YaHei, PingFang SC, sans-serif';
-            label.horizontalAlign = Label.HorizontalAlign.CENTER;
-            label.verticalAlign = Label.VerticalAlign.CENTER;
-            label.overflow = Label.Overflow.NONE;
-            label.cacheMode = Label.CacheMode.CHAR;
-            label.enableOutline = true;
-            label.outlineColor = LABEL_OUTLINE;
-            label.outlineWidth = 2;
-            label.color = LABEL_FILL;
-            root.addChild(node);
-            this.pool[this.used] = label;
-        }
-        const fontSize = text.length > 2
-            ? Math.max(9, Math.min(12, Math.floor(radius * 0.52)))
-            : text.length > 1
-                ? Math.max(10, Math.min(14, Math.floor(radius * 0.7)))
-                : Math.max(10, Math.min(16, Math.floor(radius * 1.2)));
-        if (label.string !== text) {
-            label.string = text;
-        }
-        if (label.fontSize !== fontSize) {
-            label.fontSize = fontSize;
-            label.lineHeight = fontSize + 2;
-        }
-        label.node.active = true;
-        label.node.setPosition(x, y, 0);
-        this.used += 1;
-    }
-
-    private hideSpare(): void {
-        for (let i = this.used; i < this.pool.length; i++) {
-            this.pool[i].node.active = false; // 本帧没用到的标签藏起来，不销毁
-        }
-    }
 }
 
 const tintCache = new Color();
 function colorFrom(tint: Tint): Color {
-    // Graphics.fillColor 会立刻拷走颜色，可以复用同一个 Color，少 GC。
     tintCache.set(tint.r, tint.g, tint.b, tint.a);
     return tintCache;
 }
