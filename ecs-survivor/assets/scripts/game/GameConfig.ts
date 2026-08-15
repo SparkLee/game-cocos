@@ -1,5 +1,6 @@
 import { Graphics, Label } from 'cc';
 import { Entity } from '../ecs/World';
+import { Sfx } from './Sfx';
 
 export const VIEW_W = 1280;
 export const VIEW_H = 720;
@@ -17,6 +18,7 @@ export class InputState {
     restart = false;
     togglePause = false;
     toggleHash = false;
+    toggleMute = false;
     capPreset = -1;
 }
 
@@ -43,6 +45,7 @@ export class GameContext {
     readonly events = new GameEvents();
     readonly config = new GameConfig();
     readonly hud = new HudView();
+    readonly sfx = new Sfx();
 
     graphics: Graphics | null = null;
     player: Entity = 0;

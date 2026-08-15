@@ -55,7 +55,7 @@ export class HudSystem implements System {
         }
 
         if (hud.hint) {
-            hud.hint.string = `WASD / 按住左键移动    1-4 敌人上限 ${ENEMY_CAP_PRESETS.join('/')}    C 切换碰撞    空格暂停    R 重开`;
+            hud.hint.string = `WASD / 按住左键移动    1-4 敌人上限 ${ENEMY_CAP_PRESETS.join('/')}    C 碰撞    M ${this.ctx.sfx.muted ? '已静音' : '静音'}    空格暂停    R 重开`;
         }
 
         if (hud.banner) {

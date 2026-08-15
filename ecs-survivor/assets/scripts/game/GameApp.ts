@@ -90,7 +90,7 @@ export class GameApp extends Component {
         this.world.add(entity, Position, makePosition(0, 0));
         this.world.add(entity, Velocity, makeVelocity(0, 0));
         this.world.add(entity, Radius, makeRadius(16));
-        this.world.add(entity, Health, makeHealth(100));
+        this.world.add(entity, Health, makeHealth(10000));
         this.world.add(entity, Tint, makeTint(90, 230, 210));
         return entity;
     }
@@ -99,6 +99,9 @@ export class GameApp extends Component {
         const input = this.ctx.input;
         if (input.toggleHash) {
             this.ctx.config.useSpatialHash = !this.ctx.config.useSpatialHash;
+        }
+        if (input.toggleMute) {
+            this.ctx.sfx.muted = !this.ctx.sfx.muted;
         }
         if (input.capPreset >= 0 && input.capPreset < ENEMY_CAP_PRESETS.length) {
             this.ctx.config.maxEnemies = ENEMY_CAP_PRESETS[input.capPreset];

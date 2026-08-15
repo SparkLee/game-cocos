@@ -13,6 +13,7 @@ export class InputSystem implements System {
     private restartLatch = false;
     private pauseLatch = false;
     private hashLatch = false;
+    private muteLatch = false;
     private capLatch = -1;
 
     constructor(private readonly ctx: GameContext) {
@@ -56,10 +57,12 @@ export class InputSystem implements System {
         state.restart = this.restartLatch;
         state.togglePause = this.pauseLatch;
         state.toggleHash = this.hashLatch;
+        state.toggleMute = this.muteLatch;
         state.capPreset = this.capLatch;
         this.restartLatch = false;
         this.pauseLatch = false;
         this.hashLatch = false;
+        this.muteLatch = false;
         this.capLatch = -1;
 
         const player = _world.get(this.ctx.player, Player);
@@ -74,10 +77,12 @@ export class InputSystem implements System {
     }
 
     private onKeyDown(event: EventKeyboard): void {
+        this.ctx.sfx.unlock();
         this.keys.add(event.keyCode);
         if (event.keyCode === KeyCode.KEY_R) this.restartLatch = true;
         if (event.keyCode === KeyCode.SPACE) this.pauseLatch = true;
         if (event.keyCode === KeyCode.KEY_C) this.hashLatch = true;
+        if (event.keyCode === KeyCode.KEY_M) this.muteLatch = true;
         const preset = event.keyCode - KeyCode.DIGIT_1;
         if (preset >= 0 && preset < ENEMY_CAP_PRESETS.length) {
             this.capLatch = preset;
@@ -89,6 +94,7 @@ export class InputSystem implements System {
     }
 
     private onMouseDown(event: EventMouse): void {
+        this.ctx.sfx.unlock();
         if (event.getButton() === EventMouse.BUTTON_LEFT) {
             this.pointerDown = true;
             this.readPointer(event);

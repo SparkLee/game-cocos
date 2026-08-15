@@ -19,11 +19,13 @@ export class XpSystem implements System {
             }
             this.ctx.xp += pickup.amount;
             world.destroy(pickup.entity);
+            this.ctx.sfx.play('pickup');
             while (this.ctx.xp >= this.ctx.xpToNext) {
                 this.ctx.xp -= this.ctx.xpToNext;
                 this.ctx.level += 1;
                 this.ctx.xpToNext = xpNeeded(this.ctx.level);
                 this.upgradeWeapon(world);
+                this.ctx.sfx.play('level');
             }
         }
     }

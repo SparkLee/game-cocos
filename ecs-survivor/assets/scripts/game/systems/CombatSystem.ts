@@ -50,6 +50,11 @@ export class CombatSystem implements System {
             health.current -= hit.amount;
             const flash = world.get(hit.target, HitFlash) ?? world.add(hit.target, HitFlash);
             flash.remaining = 0.08;
+            if (hit.target === this.ctx.player) {
+                this.ctx.sfx.play(health.current > 0 ? 'hurt' : 'death');
+            } else if (health.current > 0) {
+                this.ctx.sfx.play('hit');
+            }
             if (health.current > 0) {
                 continue;
             }
@@ -75,6 +80,7 @@ export class CombatSystem implements System {
             world.add(gem, Radius, makeRadius(7));
             world.add(gem, Tint, makeTint(120, 230, 140));
             this.ctx.kills += 1;
+            this.ctx.sfx.play('kill');
         }
         world.destroy(entity);
     }

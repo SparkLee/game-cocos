@@ -49,6 +49,7 @@ export class WeaponSystem implements System {
             const angle = start + weapon.spread * i;
             spawnBullet(world, origin.x, origin.y, angle, weapon);
         }
+        this.ctx.sfx.play('shoot');
     }
 }
 
