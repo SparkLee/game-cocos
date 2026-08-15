@@ -28,6 +28,7 @@ export class Health {
 export class Player {
     moveSpeed = 280;
     pickupRadius = 26;
+    /** 磁力吸附半径：经验球进入这个距离就会被吸向主角。 */
     magnetRadius = 90;
     contactTimer = 0;
 }
@@ -82,6 +83,13 @@ export class Experience {
     amount = 2;
 }
 
+/**
+ * Magnet = 磁铁。
+ *
+ * 割草游戏里常把「经验球自动飞向玩家」叫做磁力 / 磁铁效果。
+ * 这是一个标记组件，没有字段：经验球只要挂上它，MagnetSystem 就会在主角 magnetRadius 内把它吸过来。
+ * 真正捡起来加 XP 的是碰撞后的 XpSystem，磁力只负责把球吸近。
+ */
 export class Magnet {}
 
 export class Lifetime {

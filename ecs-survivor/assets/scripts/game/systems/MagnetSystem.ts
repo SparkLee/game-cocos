@@ -2,6 +2,10 @@ import { System, World } from '../../ecs/World';
 import { Experience, Magnet, Player, Position, Velocity, makeVelocity } from '../Components';
 import { GameContext } from '../GameConfig';
 
+/**
+ * 磁力系统：把带 Magnet 的经验球吸向主角。
+ * Magnet = 磁铁；吸附范围看玩家的 magnetRadius。
+ */
 export class MagnetSystem implements System {
     name = 'Magnet';
 
