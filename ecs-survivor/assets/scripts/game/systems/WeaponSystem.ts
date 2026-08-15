@@ -18,6 +18,9 @@ import {
 } from '../Components';
 import { GameContext } from '../GameConfig';
 
+/**
+ * 读取主角的 Weapon，按冷却自动瞄准并生成 Projectile（子弹）。
+ */
 export class WeaponSystem implements System {
     name = 'Weapon';
 

@@ -41,21 +41,43 @@ export class Enemy {
 /** 加上这个组件就是精英：不必再写 EliteEnemy 子类。 */
 export class Elite {}
 
+/**
+ * Projectile = 抛射物。
+ *
+ * 从拉丁语 projectum（向前抛出）而来，游戏里泛指射出去的飞行物：子弹、箭、法球等。
+ * 本组件只存伤害和穿透次数，位置与速度由 Position / Velocity 提供。
+ */
 export class Projectile {
-    damage = 12;
+    damage = 120;
+    /**
+     * pierce = 穿透次数。
+     *
+     * 子弹打中一个敌人后还剩几次可以继续飞。
+     * 0 表示碰到第一个敌人就消失；1 表示能再穿过去打第二个。
+     * CollisionSystem 每命中一次就减 1，减到小于 0 时销毁这颗子弹。
+     */
     pierce = 0;
 }
 
+/**
+ * Weapon = 武器。
+ *
+ * 挂在主角身上，描述「怎么开火」，不是飞在空中的那颗子弹。
+ * cooldown / count / damage / speed / range / spread 都是枪的参数；
+ * 真正飞出去的实体带的是 Projectile（抛射物）。
+ * 升级时改的也是这把 Weapon，下次开火才会打出更强的 Projectile。
+ */
 export class Weapon {
     cooldown = 0.38;
     timer = 0;
     count = 1;
-    damage = 12;
+    damage = 120;
     speed = 540;
     range = 520;
     spread = 0.18;
 }
 
+/** Experience = 经验。挂在经验球上，amount 是捡到后增加的 XP（Experience Points，经验值）。 */
 export class Experience {
     amount = 2;
 }
