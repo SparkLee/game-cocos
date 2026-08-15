@@ -1,0 +1,26 @@
+{
+  "ver": "1.7.1",
+  "importer": "effect",
+  "imported": true,
+  "uuid": "d7decb81-6a60-474d-b4bf-27390cd1025c",
+  "files": [
+    ".json"
+  ],
+  "subMetas": {},
+  "userData": {
+    "combinations": [
+      {
+        "USE_TWOSIDE": [
+          true
+        ],
+        "USE_ALBEDO_MAP": [
+          false
+        ],
+        "ALBEDO_UV": [
+          "v_uv"
+        ]
+      },
+      {}
+    ]
+  }
+}
